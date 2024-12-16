@@ -15,6 +15,10 @@ class Lexer:
 
         self.__read_char()
 
+    @property
+    def current_token(self):
+        return self.__current_char
+
     def __read_char(self) -> None:
         if self.__row >= len(self.__source):
             self.__current_char = None
