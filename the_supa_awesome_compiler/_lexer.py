@@ -55,7 +55,15 @@ class Lexer:
         return Token(token_type, token_literal, pos)
 
     def __peek_next_char(self) -> str:
-        return self.__source[self.__row][self.__col]
+        next_col = self.__col + 1
+        next_row = self.__row
+        if next_col >= len(self.__source[self.__row]):
+            if next_row + 1 < len(self.__source):
+                next_row += 1
+                next_col = 0
+            else:
+                return None 
+        return self.__source[next_row][next_col] 
 
     def __read_number(self) -> Token:
         start_pos = (self.__row, self.__col - 1)
