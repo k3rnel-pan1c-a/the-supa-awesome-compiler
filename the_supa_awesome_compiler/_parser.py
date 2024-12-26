@@ -268,12 +268,15 @@ class Parser:
             self.__current_token.token_literal
         )
 
-        self.__next_token()
-
         if not self.__expect_token(TokenType.EQUALS):
             return None
 
+        self.__next_token()
+
         reassignment_statement.value = self.__parse_expression(PrecedenceType.P_LOWEST)
+
+        if not self.__expect_token(TokenType.SEMICOLON):
+            return None
 
         return reassignment_statement
 

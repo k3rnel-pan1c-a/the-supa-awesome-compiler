@@ -173,7 +173,7 @@ class ReassignmentStatement(Statement):
     def json_repr(self) -> dict:
         return {
             "type": self.type().value,
-            "identifier": self.identifier,
+            "identifier": self.identifier.json_repr(),
             "value": self.value.json_repr(),
         }
 

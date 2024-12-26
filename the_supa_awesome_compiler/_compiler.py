@@ -11,6 +11,7 @@ from _AST import (
     FunctionStatement,
     BlockStatement,
     ReturnStatement,
+    ReassignmentStatement,
     InfixExpression,
     IntegerLiteral,
     FloatLiteral,
@@ -48,6 +49,8 @@ class Compiler:
             case NodeType.ASSIGNMENT_STATEMENT:
                 self.__visit_assignment_statement(cast(AssignmentStatement, node))
 
+            case NodeType.REASSIGNMENT_STATEMENT:
+                self.__visit_reassignment_statement(cast(ReassignmentStatement, node))
             case NodeType.INFIX_EXPRESSION:
                 self.__visit_infix_expression(cast(InfixExpression, node))
 
@@ -114,6 +117,15 @@ class Compiler:
             )  # Need to restrict this to only the
             # current scope
             self.__builder.store(value, ptr)
+
+    def __visit_reassignment_statement(self, node: ReassignmentStatement):
+        identifier: IdentifierLiteral = node.identifier
+        value: Expression = node.value
+
+        ptr, _ = self.__environment.lookup(identifier.identifier_literal)
+        value, _ = self.__resolve_value(value)
+
+        self.__builder.store(value, ptr)
 
     def __visit_expression_statement(self, node: ExpressionStatement):
         self.compile(node.expression)

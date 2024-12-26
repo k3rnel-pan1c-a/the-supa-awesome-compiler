@@ -19,6 +19,17 @@
                             "value_type": "int"
                         },
                         {
+                            "type": "REASSIGNMENT_STATEMENT",
+                            "identifier": {
+                                "type": "IDENTIFIER_LITERAL",
+                                "identifier": "x"
+                            },
+                            "value": {
+                                "type": "INTEGER_LITERAL",
+                                "literal": 2
+                            }
+                        },
+                        {
                             "type": "RETURN_STATEMENT",
                             "expression": {
                                 "type": "INFIX_EXPRESSION",

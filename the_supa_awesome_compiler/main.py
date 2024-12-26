@@ -8,9 +8,9 @@ from llvmlite import ir
 import llvmlite.binding as llvm
 from ctypes import CFUNCTYPE, c_int
 
-LEXER_DEBUG: bool = True
+LEXER_DEBUG: bool = False
 COMPILER_DEBUG: bool = True
-RUN_CODE: bool = False
+RUN_CODE: bool = True
 
 if __name__ == "__main__":
     with open("../tests/func.marsh", "r") as f:
