@@ -9,16 +9,21 @@ class NodeType(Enum):
 
     # STATEMENTS
     EXPRESSION_STATEMENT = "EXPRESSION_STATEMENT"
+    ASSIGNMENT_STATEMENT = "ASSIGNMENT_STATEMENT"
+    FUNCTION_STATEMENT = "FUNCTION_STATEMENT"
+    BLOCK_STATEMENT = "BLOCK_STATEMENT"
+    RETURN_STATEMENT = "RETURN_STATEMENT"
+    REASSIGNMENT_STATEMENT = "REASSIGNMENT_STATEMENT"
 
     # EXPRESSIONS
-    INFIX_EXPRESSIONS = "INFIX_EXPRESSIONS"
+    INFIX_EXPRESSION = "INFIX_EXPRESSION"
 
-    PREFIX_EXPRESSIONS = "PREFIX_EXPRESSIONS"
+    PREFIX_EXPRESSION = "PREFIX_EXPRESSION"
 
     # LITERALS
     INTEGER_LITERAL = "INTEGER_LITERAL"
-
     FLOAT_LITERAL = "FLOAT_LITERAL"
+    IDENTIFIER_LITERAL = "IDENTIFIER_LITERAL"
 
 
 class Node(ABC):
@@ -27,7 +32,7 @@ class Node(ABC):
         pass
 
     @abstractmethod
-    def json_repr(self) -> dict[str, dict]:
+    def json_repr(self) -> dict:
         pass
 
 
@@ -72,6 +77,107 @@ class ExpressionStatement(Statement):
         }
 
 
+class IdentifierLiteral(Expression):
+    def __init__(self, identifier: str):
+        self.identifier_literal = identifier
+
+    def type(self) -> NodeType:
+        return NodeType.IDENTIFIER_LITERAL
+
+    def json_repr(self) -> dict:
+        return {"type": self.type().value, "identifier": self.identifier_literal}
+
+
+class BlockStatement(Statement):
+    def __init__(self, statements: list[Statement] = None):
+        self.statements = statements if statements else []
+
+    def type(self) -> NodeType:
+        return NodeType.BLOCK_STATEMENT
+
+    def json_repr(self) -> dict:
+        return {
+            "type": self.type().value,
+            "statements": [statement.json_repr() for statement in self.statements],
+        }
+
+
+class ReturnStatement(Statement):
+    def __init__(self, return_value: Expression = None):
+        self.return_value = return_value
+
+    def type(self) -> NodeType:
+        return NodeType.RETURN_STATEMENT
+
+    def json_repr(self) -> dict:
+        return {"type": self.type().value, "expression": self.return_value.json_repr()}
+
+
+class FunctionStatement(Statement):
+    def __init__(
+        self,
+        parameters: list[IdentifierLiteral] = None,
+        body: BlockStatement = None,
+        function_name: IdentifierLiteral = None,
+        return_type: str = None,
+    ):
+        self.function_name = function_name
+        self.parameters = parameters if parameters else []
+        self.body = body
+        self.return_type = return_type
+
+    def type(self) -> NodeType:
+        return NodeType.FUNCTION_STATEMENT
+
+    def json_repr(self) -> dict:
+        return {
+            "type": self.type().value,
+            "name": self.function_name.identifier_literal,
+            "parameters": [parameter.json_repr() for parameter in self.parameters],
+            "body": self.body.json_repr(),
+            "return_type": self.return_type,
+        }
+
+
+class AssignmentStatement(Statement):
+    def __init__(
+        self,
+        identifier: IdentifierLiteral = None,
+        value: Expression = None,
+        value_type: str = None,
+    ):
+        self.identifier = identifier
+        self.value = value
+        self.value_type = value_type
+
+    def type(self):
+        return NodeType.ASSIGNMENT_STATEMENT
+
+    def json_repr(self) -> dict:
+        return {
+            "type": self.type().value,
+            "identifier": self.identifier.identifier_literal,
+            "value": self.value.json_repr(),
+            "value_type": self.value_type,
+        }
+
+
+class ReassignmentStatement(Statement):
+    def __init__(self, identifier: IdentifierLiteral = None, value: Expression = None):
+        self.identifier = identifier
+        self.value = value
+
+    def type(self) -> NodeType:
+        return NodeType.REASSIGNMENT_STATEMENT
+
+    def json_repr(self) -> dict:
+        return {
+            "type": self.type().value,
+            "identifier": self.identifier,
+            "value": self.value.json_repr(),
+        }
+
+
 class InfixExpression(Expression):
     def __init__(self, left_node: Expression, operator: str, right_node: Expression):
         self.left_node = left_node
@@ -79,7 +185,7 @@ class InfixExpression(Expression):
         self.right_node = right_node
 
     def type(self) -> NodeType:
-        return NodeType.INFIX_EXPRESSIONS
+        return NodeType.INFIX_EXPRESSION
 
     def json_repr(self) -> dict:
         return {

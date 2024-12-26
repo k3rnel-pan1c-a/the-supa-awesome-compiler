@@ -2,28 +2,40 @@
     "type": "PROGRAM",
     "statements": [
         {
-            "EXPRESSION_STATEMENT": {
-                "type": "EXPRESSION_STATEMENT",
-                "expression": {
-                    "type": "INFIX_EXPRESSIONS",
-                    "left_node": {
-                        "type": "INFIX_EXPRESSIONS",
-                        "left_node": {
-                            "type": "INTEGER_LITERAL",
-                            "literal": 5
+            "FUNCTION_STATEMENT": {
+                "type": "FUNCTION_STATEMENT",
+                "name": "main",
+                "parameters": [],
+                "body": {
+                    "type": "BLOCK_STATEMENT",
+                    "statements": [
+                        {
+                            "type": "ASSIGNMENT_STATEMENT",
+                            "identifier": "x",
+                            "value": {
+                                "type": "INTEGER_LITERAL",
+                                "literal": 5
+                            },
+                            "value_type": "int"
                         },
-                        "operator": "+",
-                        "right_node": {
-                            "type": "INTEGER_LITERAL",
-                            "literal": 5
+                        {
+                            "type": "RETURN_STATEMENT",
+                            "expression": {
+                                "type": "INFIX_EXPRESSION",
+                                "left_node": {
+                                    "type": "IDENTIFIER_LITERAL",
+                                    "identifier": "x"
+                                },
+                                "operator": "*",
+                                "right_node": {
+                                    "type": "INTEGER_LITERAL",
+                                    "literal": 2
+                                }
+                            }
                         }
-                    },
-                    "operator": "+",
-                    "right_node": {
-                        "type": "INTEGER_LITERAL",
-                        "literal": 9
-                    }
-                }
+                    ]
+                },
+                "return_type": "int"
             }
         }
     ]

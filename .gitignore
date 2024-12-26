@@ -1182,3 +1182,6 @@ abstract.record*
 
 ### GPG template
 secring.*
+
+# User defined
+the_supa_awesome_compiler/__pycache__

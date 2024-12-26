@@ -8,12 +8,14 @@ class TokenType(Enum):
 
     INT = "INT"
     FLOAT = "FLOAT"
+    IDENTIFIER = "IDENTIFIER"
 
     PLUS = "PLUS"
     MINUS = "MINUS"
     SLASH = "SLASH"
     ASTERISK = "ASTERISK"
-    MOD = "%"
+    MOD = "MOD"
+    POW = "POW"
 
     XOR = "XOR"
     OR = "OR"
@@ -26,6 +28,36 @@ class TokenType(Enum):
     RCURLY = "RCURLY"
 
     SEMICOLON = "SEMICOLON"
+    COLON = "COLON"
+    ARROW = "ARROW"
+
+    # KEYWORDS
+    LET = "LET"
+    TYPE = "TYPE"
+    FUNCTION = "FUNCTION"
+    RETURN = "RETURN"
+
+    EQUALS = "EQUALS"
+
+
+KEYWORDS: dict[str, TokenType] = {
+    "let": TokenType.LET,
+    "function": TokenType.FUNCTION,
+    "return": TokenType.RETURN,
+}
+
+TYPE_KEYWORDS = ["int", "float"]
+
+
+def lookup_identifier(identifier: str):
+    token_type = KEYWORDS.get(identifier)
+    if token_type is not None:
+        return token_type
+
+    elif identifier in TYPE_KEYWORDS:
+        return TokenType.TYPE
+
+    return TokenType.IDENTIFIER
 
 
 class Token:

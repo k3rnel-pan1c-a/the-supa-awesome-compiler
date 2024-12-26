@@ -1,1 +1,5 @@
-5 + 5 + 9;
+function main() -> int {
+    let x: int = 5;
+    x = 2;
+    return x * 2;
+}

@@ -4,9 +4,16 @@ from typing import Callable, Optional, cast
 from enum import Enum, auto
 
 from _AST import Statement, Expression, Program
-from _AST import ExpressionStatement
+from _AST import (
+    ExpressionStatement,
+    AssignmentStatement,
+    ReturnStatement,
+    BlockStatement,
+    FunctionStatement,
+    ReassignmentStatement,
+)
 from _AST import InfixExpression
-from _AST import IntegerLiteral, FloatLiteral
+from _AST import IntegerLiteral, FloatLiteral, IdentifierLiteral
 
 
 class PrecedenceType(Enum):
@@ -34,7 +41,7 @@ class Parser:
     def __init__(self, lexer: Lexer):
         self.lexer = lexer
 
-        self._errors: list[str] = []
+        self.errors: list[str] = []
 
         self.__current_token: Optional[Token] = None
         self.__peek_token: Optional[Token] = None
@@ -43,6 +50,7 @@ class Parser:
             TokenType.INT: self.__parse_int_literal,
             TokenType.FLOAT: self.__parse_float_literal,
             TokenType.LPAREN: self.__parse_grouped_expression,
+            TokenType.IDENTIFIER: self.__parse_identifier_literal,
         }
         self.__infix_parse_fns: dict[
             TokenType, Callable[[Expression], InfixExpression | None]
@@ -64,6 +72,9 @@ class Parser:
     def __peak_token_is(self, token_type: TokenType) -> bool:
         return cast(Token, self.__peek_token).token_type is token_type
 
+    def __current_token_is(self, token_type: TokenType) -> bool:
+        return cast(Token, self.__current_token).token_type is token_type
+
     def __expect_token(self, token_type: TokenType) -> bool:
         if self.__peak_token_is(token_type):
             self.__next_token()
@@ -73,12 +84,12 @@ class Parser:
             return False
 
     def __peek_error(self, token_type: TokenType) -> None:
-        self._errors.append(
+        self.errors.append(
             f"Expected next token to be: {token_type}, got {cast(Token, self.__peek_token).token_type} instead."
         )
 
     def __no_prefix_parse_fn_error(self, token_type: TokenType) -> None:
-        self._errors.append(f"No prefix parse function found for {token_type}")
+        self.errors.append(f"No prefix parse function found for {token_type}")
 
     def __current_precedence(self) -> PrecedenceType:
         precedence: PrecedenceType | None = PRECEDENCES.get(
@@ -110,7 +121,79 @@ class Parser:
         return program
 
     def __parse_statement(self) -> Statement:
-        return self.__parse_expression_statement()
+        match self.__current_token.token_type:
+            case TokenType.FUNCTION:
+                return self.__parse_function_declaration()
+            case TokenType.RETURN:
+                return self.__parse_return_statement()
+            case TokenType.LET:
+                return self.__parse_assignment_statement()
+            case TokenType.IDENTIFIER:
+                return self.__parse_reassignment_statement()
+            case _:
+                return self.__parse_expression_statement()
+
+    def __parse_function_declaration(self):
+        function_statement: FunctionStatement = FunctionStatement()
+
+        if not self.__expect_token(TokenType.IDENTIFIER):
+            return None
+
+        function_statement.function_name = IdentifierLiteral(
+            self.__current_token.token_literal
+        )
+
+        if not self.__expect_token(TokenType.LPAREN):
+            return None
+
+        function_statement.parameters = []
+
+        if not self.__expect_token(TokenType.RPAREN):
+            return None
+
+        if not self.__expect_token(TokenType.ARROW):
+            return None
+
+        if not self.__expect_token(TokenType.TYPE):
+            return None
+
+        function_statement.return_type = self.__current_token.token_literal
+
+        if not self.__expect_token(TokenType.LCURLY):
+            return None
+
+        block_statement = self.__parse_block_statement()
+
+        function_statement.body = block_statement
+
+        return function_statement
+
+    def __parse_return_statement(self) -> ReturnStatement:
+        return_statement: ReturnStatement = ReturnStatement()
+        self.__next_token()
+
+        return_statement.return_value = self.__parse_expression(PrecedenceType.P_LOWEST)
+
+        if not self.__expect_token(TokenType.SEMICOLON):
+            return None
+
+        return return_statement
+
+    def __parse_block_statement(self) -> BlockStatement:
+        block_statement: BlockStatement = BlockStatement()
+
+        self.__next_token()
+
+        while not self.__current_token_is(
+            TokenType.RCURLY
+        ) and not self.__current_token_is(TokenType.EOF):
+            statement: Statement = self.__parse_statement()
+            if statement is not None:
+                block_statement.statements.append(statement)
+
+            self.__next_token()
+
+        return block_statement
 
     def __parse_expression(self, precedence: PrecedenceType) -> Expression | None:
         prefix_fn: Callable | None = self.__prefix_parse_fns.get(
@@ -149,18 +232,63 @@ class Parser:
 
         return statement
 
+    def __parse_assignment_statement(self) -> Optional[AssignmentStatement]:
+        statement: AssignmentStatement = AssignmentStatement()
+
+        if not self.__expect_token(TokenType.IDENTIFIER):
+            return None
+
+        statement.identifier = IdentifierLiteral(self.__current_token.token_literal)
+
+        if not self.__expect_token(TokenType.COLON):
+            return None
+
+        if not self.__expect_token(TokenType.TYPE):
+            return None
+
+        statement.value_type = self.__current_token.token_literal
+
+        if not self.__expect_token(TokenType.EQUALS):
+            return None
+
+        self.__next_token()
+
+        statement.value = self.__parse_expression(PrecedenceType.P_LOWEST)
+
+        while not self.__current_token_is(
+            TokenType.SEMICOLON
+        ) and not self.__current_token_is(TokenType.EOF):
+            self.__next_token()
+
+        return statement
+
+    def __parse_reassignment_statement(self):
+        reassignment_statement: ReassignmentStatement = ReassignmentStatement()
+        reassignment_statement.identifier = IdentifierLiteral(
+            self.__current_token.token_literal
+        )
+
+        self.__next_token()
+
+        if not self.__expect_token(TokenType.EQUALS):
+            return None
+
+        reassignment_statement.value = self.__parse_expression(PrecedenceType.P_LOWEST)
+
+        return reassignment_statement
+
     def __parse_infix_expression(self, left_node: Expression) -> InfixExpression | None:
         infix_expression: InfixExpression = InfixExpression(
             left_node=left_node,
             operator=cast(Token, self.__current_token).token_literal,
-            right_node=Optional[Expression],
+            right_node=None,
         )
         precedence = self.__current_precedence()
 
         self.__next_token()
 
         if not (right_node := self.__parse_expression(precedence)):
-            self._errors.append(
+            self.errors.append(
                 f"Could not parse the expression with the left node: {left_node}"
             )
             return None
@@ -188,7 +316,7 @@ class Parser:
             )
             return int_literal
         except ValueError:
-            self._errors.append(
+            self.errors.append(
                 f"Could not parse {cast(Token, self.__current_token).token_literal} as an int"
             )
             return None
@@ -201,7 +329,10 @@ class Parser:
             )
             return float_literal
         except ValueError:
-            self._errors.append(
+            self.errors.append(
                 f"Could not parse {cast(Token, self.__current_token).token_literal} as a float"
             )
             return None
+
+    def __parse_identifier_literal(self):
+        return IdentifierLiteral(self.__current_token.token_literal)

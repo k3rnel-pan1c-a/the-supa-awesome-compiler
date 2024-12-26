@@ -1,4 +1,4 @@
-from _token import TokenType, Token
+from _token import TokenType, Token, lookup_identifier
 from typing import Optional
 
 
@@ -11,42 +11,48 @@ class Lexer:
 
         self.__current_pos = (self.__row, self.__col)
 
-        self.__current_char: Optional[str] = None
+        self.current_char: Optional[str] = None
 
         self.__read_char()
 
     @property
     def current_token(self):
-        return self.__current_char
+        return self.current_char
 
     def __read_char(self) -> None:
         if self.__row >= len(self.__source):
-            self.__current_char = None
+            self.current_char = None
 
         else:
             if self.__col >= len(self.__source[self.__row]):
                 if self.__row != (len(self.__source) - 1):
                     self.__row += 1
-                    self.__col = 0
+                    self.__col = 1
+                    self.current_char = self.__source[self.__row][self.__col - 1]
                 else:
-                    self.__current_char = None
+                    self.current_char = None
 
             else:
-                self.__current_char = self.__source[self.__row][self.__col]
+                self.current_char = self.__source[self.__row][self.__col]
                 self.__col += 1
 
             self.__current_pos = (self.__row, self.__col - 1)
 
     def __skip_whitespace(self) -> None:
-        if self.__current_char in [" ", "\r", "\t"]:
+        while self.current_char in [" ", "\r", "\t", "\n"]:
             self.__read_char()
 
     @staticmethod
     def __is_digit(literal: str | None) -> bool:
         if literal is not None:
             return literal.isnumeric()
-        else:
-            return False
+        return False
+
+    @staticmethod
+    def __is_letter(literal: str | None) -> bool:
+        if literal is not None:
+            return literal.isalpha() or literal == "_"
+        return False
 
     @staticmethod
     def __new_token(
@@ -55,23 +61,24 @@ class Lexer:
         return Token(token_type, token_literal, pos)
 
     def __peek_next_char(self) -> str:
-        next_col = self.__col + 1
-        next_row = self.__row
-        if next_col >= len(self.__source[self.__row]):
-            if next_row + 1 < len(self.__source):
-                next_row += 1
-                next_col = 0
-            else:
-                return None 
-        return self.__source[next_row][next_col] 
+        return self.__source[self.__row][self.__col]
+
+    def __read_literal(self):
+        literal: str = ""
+
+        while self.current_char is not None and self.__is_letter(self.current_char):
+            literal += self.current_char
+            self.__read_char()
+
+        return literal
 
     def __read_number(self) -> Token:
         start_pos = (self.__row, self.__col - 1)
         dot_count: int = 0
         number: str = ""
 
-        while self.__is_digit(self.__current_char) or self.__current_char == ".":
-            if self.__current_char == ".":
+        while self.__is_digit(self.current_char) or self.current_char == ".":
+            if self.current_char == ".":
                 dot_count += 1
 
             if dot_count > 1:
@@ -81,10 +88,10 @@ class Lexer:
                     start_pos,
                 )
 
-            number += self.__current_char or ""
+            number += self.current_char or ""
             self.__read_char()
 
-            if self.__current_char is None:
+            if self.current_char is None:
                 break
 
         if dot_count == 0:
@@ -103,11 +110,15 @@ class Lexer:
     def next_token(self) -> Token:
         self.__skip_whitespace()
 
-        match self.__current_char:
+        match self.current_char:
             case "+":
                 tok = self.__new_token(TokenType.PLUS, "+", self.__current_pos)
             case "-":
-                tok = self.__new_token(TokenType.MINUS, "-", self.__current_pos)
+                if self.__peek_next_char() == ">":
+                    tok = self.__new_token(TokenType.ARROW, "->", self.__current_pos)
+                    self.__read_char()
+                else:
+                    tok = self.__new_token(TokenType.MINUS, "-", self.__current_pos)
             case "*":
                 tok = self.__new_token(TokenType.ASTERISK, "*", self.__current_pos)
             case "/":
@@ -126,8 +137,18 @@ class Lexer:
                 tok = self.__new_token(TokenType.LPAREN, "(", self.__current_pos)
             case ")":
                 tok = self.__new_token(TokenType.RPAREN, ")", self.__current_pos)
+
+            case "{":
+                tok = self.__new_token(TokenType.LCURLY, "{", self.__current_pos)
+            case "}":
+                tok = self.__new_token(TokenType.RCURLY, "}", self.__current_pos)
             case ";":
                 tok = self.__new_token(TokenType.SEMICOLON, ";", self.__current_pos)
+            case ":":
+                tok = self.__new_token(TokenType.COLON, ":", self.__current_pos)
+            case "=":
+                tok = self.__new_token(TokenType.EQUALS, "=", self.__current_pos)
+
             case None:
                 tok = self.__new_token(
                     TokenType.EOF,
@@ -135,12 +156,17 @@ class Lexer:
                     (self.__current_pos[0], self.__current_pos[1] + 1),
                 )
             case _:
-                if self.__is_digit(self.__current_char):
+                if self.__is_letter(self.current_char):
+                    literal = self.__read_literal()
+                    literal_type = lookup_identifier(literal)
+                    tok = self.__new_token(literal_type, literal, self.__current_pos)
+                    return tok
+                if self.__is_digit(self.current_char):
                     tok = self.__read_number()
                     return tok
                 else:
                     tok = self.__new_token(
-                        TokenType.ILLEGAL, self.__current_char, self.__current_pos
+                        TokenType.ILLEGAL, self.current_char, self.__current_pos
                     )
 
         self.__read_char()
