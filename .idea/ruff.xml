@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="RuffConfigService">
-    <option name="globalRuffLspExecutablePath" value="/Library/Frameworks/Python.framework/Versions/3.11/bin/ruff" />
-    <option name="projectRuffLspExecutablePath" value="$PROJECT_DIR$/.venv/bin/ruff" />
-  </component>
-</project>
