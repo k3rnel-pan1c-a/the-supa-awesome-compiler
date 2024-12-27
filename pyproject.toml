@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 llvmlite = "^0.43.0"
+graphviz = "^0.20.3"
 
 
 [tool.poetry.group.dev.dependencies]
