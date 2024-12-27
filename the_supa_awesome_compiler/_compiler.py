@@ -13,6 +13,7 @@ from _AST import (
     ReturnStatement,
     ReassignmentStatement,
     IfStatement,
+    WhileLoop,
     BooleanLiteral,
     PrefixExpression,
     InfixExpression,
@@ -88,6 +89,9 @@ class Compiler:
 
             case NodeType.PREFIX_EXPRESSION:
                 self.__visit_prefix_expression(cast(PrefixExpression, node))
+
+            case NodeType.WHILE_LOOP:
+                self.__visit_while_loop(cast(WhileLoop, node))
 
     def __visit_program(self, node: Program):
         for stmt in node.statements:
@@ -178,6 +182,23 @@ class Compiler:
 
                 with otherwise:
                     self.compile(alternative)
+
+    def __visit_while_loop(self, node: WhileLoop):
+        condition = node.condition
+        consequence = node.consequence
+
+        value, _ = self.__resolve_value(condition)
+
+        while_loop_entry = self.__builder.append_basic_block("while_loop_entry")
+        while_loop_otherwise = self.__builder.append_basic_block("while_loop_otherwise")
+
+        self.__builder.cbranch(value, while_loop_entry, while_loop_otherwise)
+
+        self.__builder.position_at_start(while_loop_entry)
+        self.compile(consequence)
+        value, _ = self.__resolve_value(condition)
+        self.__builder.cbranch(value, while_loop_entry, while_loop_otherwise)
+        self.__builder.position_at_start(while_loop_otherwise)
 
     def __visit_expression_statement(self, node: ExpressionStatement):
         self.compile(node.expression)

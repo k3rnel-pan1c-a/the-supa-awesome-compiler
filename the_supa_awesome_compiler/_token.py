@@ -52,6 +52,9 @@ class TokenType(Enum):
     LT = "LT"
     NOT = "NOT"
 
+    # LOOPS
+    WHILE = "WHILE"
+
 
 KEYWORDS: dict[str, TokenType] = {
     "let": TokenType.LET,
@@ -61,6 +64,7 @@ KEYWORDS: dict[str, TokenType] = {
     "else": TokenType.ELSE,
     "true": TokenType.TRUE,
     "false": TokenType.FALSE,
+    "while": TokenType.WHILE,
 }
 
 TYPE_KEYWORDS = ["int", "float", "bool"]

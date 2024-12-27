@@ -12,6 +12,7 @@ from _AST import (
     FunctionStatement,
     ReassignmentStatement,
     IfStatement,
+    WhileLoop,
 )
 from _AST import InfixExpression, PrefixExpression
 from _AST import IntegerLiteral, FloatLiteral, IdentifierLiteral, BooleanLiteral
@@ -159,6 +160,8 @@ class Parser:
                 return self.__parse_assignment_statement()
             case TokenType.IDENTIFIER:
                 return self.__parse_reassignment_statement()
+            case TokenType.WHILE:
+                return self.__parse_while_loop()
             case _:
                 return self.__parse_expression_statement()
 
@@ -398,3 +401,17 @@ class Parser:
             if_statement.alternative = self.__parse_block_statement()
 
         return if_statement
+
+    def __parse_while_loop(self):
+        while_loop: WhileLoop = WhileLoop()
+
+        self.__next_token()
+
+        while_loop.condition = self.__parse_expression(PrecedenceType.P_LOWEST)
+
+        if not self.__expect_token(TokenType.LCURLY):
+            return None
+
+        while_loop.consequence = self.__parse_block_statement()
+
+        return while_loop

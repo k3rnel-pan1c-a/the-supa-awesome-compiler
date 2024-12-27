@@ -8,8 +8,9 @@ from llvmlite import ir
 import llvmlite.binding as llvm
 from ctypes import CFUNCTYPE, c_int
 
-LEXER_DEBUG: bool = False
+LEXER_DEBUG: bool = True
 COMPILER_DEBUG: bool = False
+RUN_COMPILER: bool = True
 RUN_CODE: bool = True
 
 if __name__ == "__main__":
@@ -35,16 +36,17 @@ if __name__ == "__main__":
     with open("../debug/ast.json", "w") as f:
         json.dump(program.json_repr(), f, indent=4)
 
-    compiler = Compiler()
-    compiler.compile(program)
+    if RUN_COMPILER:
+        compiler = Compiler()
+        compiler.compile(program)
 
-    module: ir.Module = compiler.module
-    module.triple = llvm.get_default_triple()
+        module: ir.Module = compiler.module
+        module.triple = llvm.get_default_triple()
 
-    with open("../debug/ir.ll", "w") as f:
-        f.write(str(module))
+        with open("../debug/ir.ll", "w") as f:
+            f.write(str(module))
 
-    print("Compilation complete! IR written to ir.ll")
+        print("Compilation complete! IR written to ir.ll")
 
     if RUN_CODE:
         llvm.initialize()

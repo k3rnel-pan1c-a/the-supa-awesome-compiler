@@ -26,6 +26,9 @@ class NodeType(Enum):
     FLOAT_LITERAL = "FLOAT_LITERAL"
     IDENTIFIER_LITERAL = "IDENTIFIER_LITERAL"
 
+    # LOOPS
+    WHILE_LOOP = "WHILE_LOOP"
+
 
 class Node(ABC):
     @abstractmethod
@@ -267,3 +270,26 @@ class BooleanLiteral(Expression):
 
     def json_repr(self) -> dict:
         return {"type": self.type().value, "boolean_value": self.boolean_value}
+
+
+class WhileLoop(Statement):
+    def __init__(
+        self,
+        condition: Expression = None,
+        consequence: BlockStatement = None,
+        alternative: BlockStatement = None,
+    ):
+        self.condition = condition
+        self.consequence = consequence
+        self.alternative = alternative if alternative is not None else BlockStatement()
+
+    def type(self) -> NodeType:
+        return NodeType.WHILE_LOOP
+
+    def json_repr(self) -> dict:
+        return {
+            "type": self.type().value,
+            "condition": self.condition.json_repr(),
+            "consequence": self.consequence.json_repr(),
+            "alternative": self.alternative.json_repr(),
+        }
