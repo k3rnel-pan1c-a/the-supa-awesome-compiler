@@ -159,7 +159,6 @@ class Compiler:
 
         ptr, _ = self.__environment.lookup(identifier.identifier_literal)
         value, _ = self.__resolve_value(value)
-
         self.__builder.store(value, ptr)
 
     def __visit_if_statement(self, node: IfStatement):
@@ -184,16 +183,17 @@ class Compiler:
         self.compile(node.expression)
 
     def __visit_prefix_expression(self, node: PrefixExpression):
-        operand = node.operand
+        operand_value, operand_type = self.__resolve_value(node.operand)
         operator = node.operator
 
-        match operand:
-            case "~":
-                result = self.__builder.not_(operator)
-                return result, self.__type_map["int"]
+        if isinstance(operand_type, ir.IntType):
+            match operator:
+                case "~":
+                    result = self.__builder.not_(operand_value)
+                    return result, self.__type_map["int"]
 
-            case _:
-                return None, None
+                case _:
+                    return None, None
 
     def __visit_infix_expression(self, node: InfixExpression):
         left_val, left_type = self.__resolve_value(node.left_node)
@@ -263,3 +263,7 @@ class Compiler:
             case NodeType.INFIX_EXPRESSION:
                 node: InfixExpression = cast(InfixExpression, node)
                 return self.__visit_infix_expression(node)
+
+            case NodeType.PREFIX_EXPRESSION:
+                node: PrefixExpression = cast(PrefixExpression, node)
+                return self.__visit_prefix_expression(node)
