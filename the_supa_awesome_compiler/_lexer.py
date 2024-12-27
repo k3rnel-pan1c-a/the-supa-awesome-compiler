@@ -126,13 +126,19 @@ class Lexer:
             case "%":
                 tok = self.__new_token(TokenType.MOD, "%", self.__current_pos)
             case "^":
-                tok = self.__new_token(TokenType.XOR, "^", self.__current_pos)
+                tok = self.__new_token(TokenType.BW_XOR, "^", self.__current_pos)
             case "|":
-                tok = self.__new_token(TokenType.OR, "|", self.__current_pos)
+                tok = self.__new_token(TokenType.BW_OR, "|", self.__current_pos)
             case "&":
-                tok = self.__new_token(TokenType.AND, "&", self.__current_pos)
+                tok = self.__new_token(TokenType.BW_AND, "&", self.__current_pos)
+            case "~":
+                tok = self.__new_token(TokenType.BW_NOT, "~", self.__current_pos)
             case "!":
-                tok = self.__new_token(TokenType.NOT, "!", self.__current_pos)
+                if self.__peek_next_char() == "=":
+                    tok = self.__new_token(TokenType.NOT_EQ, "!=", self.__current_pos)
+                    self.__read_char()
+                else:
+                    tok = self.__new_token(TokenType.NOT, "!", self.__current_pos)
             case "(":
                 tok = self.__new_token(TokenType.LPAREN, "(", self.__current_pos)
             case ")":

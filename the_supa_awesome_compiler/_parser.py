@@ -13,7 +13,7 @@ from _AST import (
     ReassignmentStatement,
     IfStatement,
 )
-from _AST import InfixExpression
+from _AST import InfixExpression, PrefixExpression
 from _AST import IntegerLiteral, FloatLiteral, IdentifierLiteral, BooleanLiteral
 
 
@@ -21,6 +21,10 @@ class PrecedenceType(Enum):
     P_LOWEST = 0
     P_EQUALS = auto()
     P_LESSGREATER = auto()
+    P_BW_OR = auto()
+    P_BW_XOR = auto()
+    P_BW_AND = auto()
+    P_BW_NOT = auto()
     P_SUM = auto()
     P_PRODUCT = auto()
     P_EXPONENT = auto()
@@ -41,6 +45,10 @@ PRECEDENCES: dict[TokenType, PrecedenceType] = {
     TokenType.LT: PrecedenceType.P_LESSGREATER,
     TokenType.GT_EQ: PrecedenceType.P_LESSGREATER,
     TokenType.LT_EQ: PrecedenceType.P_LESSGREATER,
+    TokenType.BW_OR: PrecedenceType.P_BW_OR,
+    TokenType.BW_XOR: PrecedenceType.P_BW_XOR,
+    TokenType.BW_AND: PrecedenceType.P_BW_AND,
+    TokenType.BW_NOT: PrecedenceType.P_BW_NOT,
 }
 
 
@@ -60,6 +68,7 @@ class Parser:
             TokenType.IDENTIFIER: self.__parse_identifier_literal,
             TokenType.TRUE: self.__parse_boolean_literal,
             TokenType.FALSE: self.__parse_boolean_literal,
+            TokenType.BW_NOT: self.__parse_bitwise_not_expression,
         }
         self.__infix_parse_fns: dict[
             TokenType, Callable[[Expression], InfixExpression | None]
@@ -75,6 +84,9 @@ class Parser:
             TokenType.LT: self.__parse_infix_expression,
             TokenType.GT_EQ: self.__parse_infix_expression,
             TokenType.LT_EQ: self.__parse_infix_expression,
+            TokenType.BW_XOR: self.__parse_infix_expression,
+            TokenType.BW_OR: self.__parse_infix_expression,
+            TokenType.BW_AND: self.__parse_infix_expression,
         }
 
         self.__next_token()
@@ -304,7 +316,6 @@ class Parser:
             right_node=None,
         )
         precedence = self.__current_precedence()
-
         self.__next_token()
 
         if not (right_node := self.__parse_expression(precedence)):
@@ -314,7 +325,6 @@ class Parser:
             return None
 
         infix_expression.right_node = right_node
-
         return infix_expression
 
     def __parse_grouped_expression(self):
@@ -359,6 +369,15 @@ class Parser:
 
     def __parse_boolean_literal(self):
         return BooleanLiteral(self.__current_token_is(TokenType.TRUE))
+
+    def __parse_bitwise_not_expression(self):
+        prefix_expression = PrefixExpression()
+        prefix_expression.operator = self.__current_token.token_literal
+
+        self.__next_token()
+
+        prefix_expression.operand = self.__parse_expression(PrecedenceType.P_LOWEST)
+        return prefix_expression
 
     def __parse_if_statement(self):
         if_statement: IfStatement = IfStatement()

@@ -14,6 +14,7 @@ from _AST import (
     ReassignmentStatement,
     IfStatement,
     BooleanLiteral,
+    PrefixExpression,
     InfixExpression,
     IntegerLiteral,
     FloatLiteral,
@@ -84,6 +85,9 @@ class Compiler:
 
             case NodeType.INFIX_EXPRESSION:
                 self.__visit_infix_expression(cast(InfixExpression, node))
+
+            case NodeType.PREFIX_EXPRESSION:
+                self.__visit_prefix_expression(cast(PrefixExpression, node))
 
     def __visit_program(self, node: Program):
         for stmt in node.statements:
@@ -179,6 +183,18 @@ class Compiler:
     def __visit_expression_statement(self, node: ExpressionStatement):
         self.compile(node.expression)
 
+    def __visit_prefix_expression(self, node: PrefixExpression):
+        operand = node.operand
+        operator = node.operator
+
+        match operand:
+            case "~":
+                result = self.__builder.not_(operator)
+                return result, self.__type_map["int"]
+
+            case _:
+                return None, None
+
     def __visit_infix_expression(self, node: InfixExpression):
         left_val, left_type = self.__resolve_value(node.left_node)
         right_val, right_type = self.__resolve_value(node.right_node)
@@ -197,6 +213,12 @@ class Compiler:
                     result = self.__builder.sdiv(left_val, right_val)
                 case "%":
                     result = self.__builder.srem(left_val, right_val)
+                case "^":
+                    result = self.__builder.xor(left_val, right_val)
+                case "&":
+                    result = self.__builder.and_(left_val, right_val)
+                case "|":
+                    result = self.__builder.or_(left_val, right_val)
                 case "<":
                     result = self.__builder.icmp_signed("<", left_val, right_val)
                 case ">":

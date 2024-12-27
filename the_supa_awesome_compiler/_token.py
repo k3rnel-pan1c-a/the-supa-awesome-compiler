@@ -17,10 +17,10 @@ class TokenType(Enum):
     MOD = "MOD"
     POW = "POW"
 
-    XOR = "XOR"
-    OR = "OR"
-    AND = "AND"
-    NOT = "NOT"
+    BW_XOR = "BW_XOR"
+    BW_OR = "BW_OR"
+    BW_AND = "BW_AND"
+    BW_NOT = "BW_NOT"
 
     LPAREN = "LPAREN"
     RPAREN = "RPAREN"
@@ -50,6 +50,7 @@ class TokenType(Enum):
     GT_EQ = "GT_EQ"
     GT = "GT"
     LT = "LT"
+    NOT = "NOT"
 
 
 KEYWORDS: dict[str, TokenType] = {

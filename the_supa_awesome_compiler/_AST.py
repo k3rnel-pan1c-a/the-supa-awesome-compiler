@@ -220,6 +220,22 @@ class InfixExpression(Expression):
         }
 
 
+class PrefixExpression(Expression):
+    def __init__(self, operator: str = None, operand: Expression = None):
+        self.operator = operator
+        self.operand = operand
+
+    def type(self) -> NodeType:
+        return NodeType.PREFIX_EXPRESSION
+
+    def json_repr(self) -> dict:
+        return {
+            "type": self.type().value,
+            "operator": self.operator,
+            "operand": self.operand.json_repr(),
+        }
+
+
 class IntegerLiteral(Expression):
     def __init__(self, int_literal: Optional[None] = None):
         self.int_literal = int_literal

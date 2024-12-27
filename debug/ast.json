@@ -19,38 +19,22 @@
                             "value_type": "int"
                         },
                         {
-                            "type": "IF_STATEMENT",
-                            "condition": {
+                            "type": "REASSIGNMENT_STATEMENT",
+                            "identifier": {
+                                "type": "IDENTIFIER_LITERAL",
+                                "identifier": "a"
+                            },
+                            "value": {
                                 "type": "INFIX_EXPRESSION",
                                 "left_node": {
-                                    "type": "IDENTIFIER_LITERAL",
-                                    "identifier": "a"
+                                    "type": "INTEGER_LITERAL",
+                                    "literal": 2
                                 },
-                                "operator": "==",
+                                "operator": "^",
                                 "right_node": {
                                     "type": "INTEGER_LITERAL",
-                                    "literal": 5
+                                    "literal": 3
                                 }
-                            },
-                            "consequence": {
-                                "type": "BLOCK_STATEMENT",
-                                "statements": [
-                                    {
-                                        "type": "REASSIGNMENT_STATEMENT",
-                                        "identifier": {
-                                            "type": "IDENTIFIER_LITERAL",
-                                            "identifier": "a"
-                                        },
-                                        "value": {
-                                            "type": "INTEGER_LITERAL",
-                                            "literal": 6
-                                        }
-                                    }
-                                ]
-                            },
-                            "alternative": {
-                                "type": "BLOCK_STATEMENT",
-                                "statements": []
                             }
                         },
                         {
