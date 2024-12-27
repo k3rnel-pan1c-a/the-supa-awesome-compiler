@@ -11,7 +11,7 @@
                     "statements": [
                         {
                             "type": "ASSIGNMENT_STATEMENT",
-                            "identifier": "x",
+                            "identifier": "a",
                             "value": {
                                 "type": "INTEGER_LITERAL",
                                 "literal": 5
@@ -19,29 +19,45 @@
                             "value_type": "int"
                         },
                         {
-                            "type": "REASSIGNMENT_STATEMENT",
-                            "identifier": {
-                                "type": "IDENTIFIER_LITERAL",
-                                "identifier": "x"
+                            "type": "IF_STATEMENT",
+                            "condition": {
+                                "type": "INFIX_EXPRESSION",
+                                "left_node": {
+                                    "type": "IDENTIFIER_LITERAL",
+                                    "identifier": "a"
+                                },
+                                "operator": "==",
+                                "right_node": {
+                                    "type": "INTEGER_LITERAL",
+                                    "literal": 5
+                                }
                             },
-                            "value": {
-                                "type": "INTEGER_LITERAL",
-                                "literal": 2
+                            "consequence": {
+                                "type": "BLOCK_STATEMENT",
+                                "statements": [
+                                    {
+                                        "type": "REASSIGNMENT_STATEMENT",
+                                        "identifier": {
+                                            "type": "IDENTIFIER_LITERAL",
+                                            "identifier": "a"
+                                        },
+                                        "value": {
+                                            "type": "INTEGER_LITERAL",
+                                            "literal": 6
+                                        }
+                                    }
+                                ]
+                            },
+                            "alternative": {
+                                "type": "BLOCK_STATEMENT",
+                                "statements": []
                             }
                         },
                         {
                             "type": "RETURN_STATEMENT",
                             "expression": {
-                                "type": "INFIX_EXPRESSION",
-                                "left_node": {
-                                    "type": "IDENTIFIER_LITERAL",
-                                    "identifier": "x"
-                                },
-                                "operator": "*",
-                                "right_node": {
-                                    "type": "INTEGER_LITERAL",
-                                    "literal": 2
-                                }
+                                "type": "IDENTIFIER_LITERAL",
+                                "identifier": "a"
                             }
                         }
                     ]

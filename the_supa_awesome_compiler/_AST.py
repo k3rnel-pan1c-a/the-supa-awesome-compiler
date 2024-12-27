@@ -14,11 +14,12 @@ class NodeType(Enum):
     BLOCK_STATEMENT = "BLOCK_STATEMENT"
     RETURN_STATEMENT = "RETURN_STATEMENT"
     REASSIGNMENT_STATEMENT = "REASSIGNMENT_STATEMENT"
+    IF_STATEMENT = "IF_STATEMENT"
 
     # EXPRESSIONS
     INFIX_EXPRESSION = "INFIX_EXPRESSION"
-
     PREFIX_EXPRESSION = "PREFIX_EXPRESSION"
+    BOOLEAN_EXPRESSION = "BOOLEAN_EXPRESSION"
 
     # LITERALS
     INTEGER_LITERAL = "INTEGER_LITERAL"
@@ -139,6 +140,29 @@ class FunctionStatement(Statement):
         }
 
 
+class IfStatement(Statement):
+    def __init__(
+        self,
+        condition: Expression = None,
+        consequence: BlockStatement = None,
+        alternative: BlockStatement = None,
+    ):
+        self.condition = condition
+        self.consequence = consequence
+        self.alternative = alternative if alternative is not None else BlockStatement()
+
+    def type(self) -> NodeType:
+        return NodeType.IF_STATEMENT
+
+    def json_repr(self) -> dict:
+        return {
+            "type": self.type().value,
+            "condition": self.condition.json_repr(),
+            "consequence": self.consequence.json_repr(),
+            "alternative": self.alternative.json_repr(),
+        }
+
+
 class AssignmentStatement(Statement):
     def __init__(
         self,
@@ -216,3 +240,14 @@ class FloatLiteral(Expression):
 
     def json_repr(self) -> dict:
         return {"type": self.type().value, "literal": self.float_literal}
+
+
+class BooleanLiteral(Expression):
+    def __init__(self, boolean_value: bool = None):
+        self.boolean_value = boolean_value
+
+    def type(self) -> NodeType:
+        return NodeType.BOOLEAN_EXPRESSION
+
+    def json_repr(self) -> dict:
+        return {"type": self.type().value, "boolean_value": self.boolean_value}

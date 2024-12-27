@@ -137,7 +137,6 @@ class Lexer:
                 tok = self.__new_token(TokenType.LPAREN, "(", self.__current_pos)
             case ")":
                 tok = self.__new_token(TokenType.RPAREN, ")", self.__current_pos)
-
             case "{":
                 tok = self.__new_token(TokenType.LCURLY, "{", self.__current_pos)
             case "}":
@@ -147,7 +146,24 @@ class Lexer:
             case ":":
                 tok = self.__new_token(TokenType.COLON, ":", self.__current_pos)
             case "=":
-                tok = self.__new_token(TokenType.EQUALS, "=", self.__current_pos)
+                if self.__peek_next_char() == "=":
+                    tok = self.__new_token(TokenType.EQ_EQ, "==", self.__current_pos)
+                    self.__read_char()
+                else:
+                    tok = self.__new_token(TokenType.EQUALS, "=", self.__current_pos)
+            case ">":
+                if self.__peek_next_char() == "=":
+                    tok = self.__new_token(TokenType.GT_EQ, ">=", self.__current_pos)
+                    self.__read_char()
+                else:
+                    tok = self.__new_token(TokenType.GT, ">", self.__current_pos)
+
+            case "<":
+                if self.__peek_next_char() == "=":
+                    tok = self.__new_token(TokenType.LT_EQ, "<=", self.__current_pos)
+                    self.__read_char()
+                else:
+                    tok = self.__new_token(TokenType.LT, "<", self.__current_pos)
 
             case None:
                 tok = self.__new_token(

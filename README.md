@@ -1,3 +1,3 @@
 ## Marsh
 
-A very cool compiler written in python and LLVM!! 
+A very cool compiler written using python and LLVM!! 

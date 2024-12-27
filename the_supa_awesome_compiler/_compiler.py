@@ -12,6 +12,8 @@ from _AST import (
     BlockStatement,
     ReturnStatement,
     ReassignmentStatement,
+    IfStatement,
+    BooleanLiteral,
     InfixExpression,
     IntegerLiteral,
     FloatLiteral,
@@ -24,10 +26,35 @@ from typing import cast, Optional
 
 class Compiler:
     def __init__(self):
-        self.__type_map = {"int": ir.IntType(32), "float": ir.FloatType()}
+        self.__type_map = {
+            "int": ir.IntType(32),
+            "float": ir.FloatType(),
+            "bool": ir.IntType(1),
+        }
         self.module = ir.Module("main_module")
         self.__builder: Optional[ir.IRBuilder] = None
         self.__environment = Environment()
+
+        self.__initialize_builtins()
+
+    def __initialize_builtins(self):
+        def __initialize_booleans():
+            bool_type: ir.Type = self.__type_map["bool"]
+
+            true_const = ir.GlobalVariable(self.module, bool_type, "true")
+            true_const.initializer = ir.Constant(bool_type, 1)
+            true_const.global_constant = True
+
+            false_const = ir.GlobalVariable(self.module, bool_type, "false")
+            false_const.initializer = ir.Constant(bool_type, 0)
+            false_const.global_constant = True
+
+            return true_const, false_const
+
+        true_const, false_const = __initialize_booleans()
+
+        self.__environment.define("true", true_const, true_const.type)
+        self.__environment.define("false", false_const, false_const.type)
 
     def compile(self, node: Node):
         match node.type():
@@ -51,6 +78,10 @@ class Compiler:
 
             case NodeType.REASSIGNMENT_STATEMENT:
                 self.__visit_reassignment_statement(cast(ReassignmentStatement, node))
+
+            case NodeType.IF_STATEMENT:
+                self.__visit_if_statement(cast(IfStatement, node))
+
             case NodeType.INFIX_EXPRESSION:
                 self.__visit_infix_expression(cast(InfixExpression, node))
 
@@ -127,6 +158,24 @@ class Compiler:
 
         self.__builder.store(value, ptr)
 
+    def __visit_if_statement(self, node: IfStatement):
+        condition = node.condition
+        consequence = node.consequence
+        alternative = node.alternative
+
+        value, _ = self.__resolve_value(condition)
+
+        if not alternative.statements:
+            with self.__builder.if_then(value):
+                self.compile(consequence)
+        else:
+            with self.__builder.if_else(value) as (then, otherwise):
+                with then:
+                    self.compile(consequence)
+
+                with otherwise:
+                    self.compile(alternative)
+
     def __visit_expression_statement(self, node: ExpressionStatement):
         self.compile(node.expression)
 
@@ -148,6 +197,17 @@ class Compiler:
                     result = self.__builder.sdiv(left_val, right_val)
                 case "%":
                     result = self.__builder.srem(left_val, right_val)
+                case "<":
+                    result = self.__builder.icmp_signed("<", left_val, right_val)
+                case ">":
+                    result = self.__builder.icmp_signed(">", left_val, right_val)
+                case ">=":
+                    result = self.__builder.icmp_signed(">=", left_val, right_val)
+                case "<=":
+                    result = self.__builder.icmp_signed("<=", left_val, right_val)
+                case "==":
+                    result = self.__builder.icmp_signed("==", left_val, right_val)
+
                 case _:
                     print(f"Unsupported operator {operator}")
                     return None, None
@@ -155,7 +215,7 @@ class Compiler:
 
         return None, None
 
-    def __resolve_value(self, node: Expression | Statement, value_type: str = None):
+    def __resolve_value(self, node: Expression | Statement):
         match node.type():
             case NodeType.INTEGER_LITERAL:
                 node: IntegerLiteral = cast(IntegerLiteral, node)
@@ -169,8 +229,14 @@ class Compiler:
 
             case NodeType.IDENTIFIER_LITERAL:
                 node: IdentifierLiteral = cast(IdentifierLiteral, node)
-                ptr, type = self.__environment.lookup(node.identifier_literal)
-                return self.__builder.load(ptr), type
+                ptr, node_type = self.__environment.lookup(node.identifier_literal)
+                return self.__builder.load(ptr), node_type
+
+            case NodeType.BOOLEAN_EXPRESSION:  # Load the boolean values from the symbol table
+                node: BooleanLiteral = cast(BooleanLiteral, node)
+                # value, node_type = self.__environment.lookup(node.boolean_value.)
+                value, node_type = node.boolean_value, self.__type_map["bool"]
+                return ir.Constant(node_type, 1 if value else 0), node_type
 
             case NodeType.INFIX_EXPRESSION:
                 node: InfixExpression = cast(InfixExpression, node)

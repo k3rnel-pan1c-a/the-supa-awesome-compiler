@@ -1,5 +1,8 @@
 function main() -> int {
-    let x: int = 5;
-    x = 2;
-    return x * 2;
+    let a: int = 5;
+
+    if a == 5{
+        a = 6;
+    }
+    return a;
 }

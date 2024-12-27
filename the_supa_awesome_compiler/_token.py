@@ -36,17 +36,33 @@ class TokenType(Enum):
     TYPE = "TYPE"
     FUNCTION = "FUNCTION"
     RETURN = "RETURN"
+    IF = "IF"
+    ELSE = "ELSE"
+    TRUE = "TRUE"
+    FALSE = "FALSE"
 
     EQUALS = "EQUALS"
+
+    # CONDITIONALS
+    EQ_EQ = "EQ_EQ"
+    NOT_EQ = "NOT_EQ"
+    LT_EQ = "LT_EQ"
+    GT_EQ = "GT_EQ"
+    GT = "GT"
+    LT = "LT"
 
 
 KEYWORDS: dict[str, TokenType] = {
     "let": TokenType.LET,
     "function": TokenType.FUNCTION,
     "return": TokenType.RETURN,
+    "if": TokenType.IF,
+    "else": TokenType.ELSE,
+    "true": TokenType.TRUE,
+    "false": TokenType.FALSE,
 }
 
-TYPE_KEYWORDS = ["int", "float"]
+TYPE_KEYWORDS = ["int", "float", "bool"]
 
 
 def lookup_identifier(identifier: str):

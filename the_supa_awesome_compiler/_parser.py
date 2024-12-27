@@ -11,9 +11,10 @@ from _AST import (
     BlockStatement,
     FunctionStatement,
     ReassignmentStatement,
+    IfStatement,
 )
 from _AST import InfixExpression
-from _AST import IntegerLiteral, FloatLiteral, IdentifierLiteral
+from _AST import IntegerLiteral, FloatLiteral, IdentifierLiteral, BooleanLiteral
 
 
 class PrecedenceType(Enum):
@@ -34,6 +35,12 @@ PRECEDENCES: dict[TokenType, PrecedenceType] = {
     TokenType.SLASH: PrecedenceType.P_PRODUCT,
     TokenType.ASTERISK: PrecedenceType.P_PRODUCT,
     TokenType.MOD: PrecedenceType.P_PRODUCT,
+    TokenType.EQ_EQ: PrecedenceType.P_EQUALS,
+    TokenType.NOT_EQ: PrecedenceType.P_EQUALS,
+    TokenType.GT: PrecedenceType.P_LESSGREATER,
+    TokenType.LT: PrecedenceType.P_LESSGREATER,
+    TokenType.GT_EQ: PrecedenceType.P_LESSGREATER,
+    TokenType.LT_EQ: PrecedenceType.P_LESSGREATER,
 }
 
 
@@ -51,6 +58,8 @@ class Parser:
             TokenType.FLOAT: self.__parse_float_literal,
             TokenType.LPAREN: self.__parse_grouped_expression,
             TokenType.IDENTIFIER: self.__parse_identifier_literal,
+            TokenType.TRUE: self.__parse_boolean_literal,
+            TokenType.FALSE: self.__parse_boolean_literal,
         }
         self.__infix_parse_fns: dict[
             TokenType, Callable[[Expression], InfixExpression | None]
@@ -60,6 +69,12 @@ class Parser:
             TokenType.SLASH: self.__parse_infix_expression,
             TokenType.ASTERISK: self.__parse_infix_expression,
             TokenType.MOD: self.__parse_infix_expression,
+            TokenType.EQ_EQ: self.__parse_infix_expression,
+            TokenType.NOT_EQ: self.__parse_infix_expression,
+            TokenType.GT: self.__parse_infix_expression,
+            TokenType.LT: self.__parse_infix_expression,
+            TokenType.GT_EQ: self.__parse_infix_expression,
+            TokenType.LT_EQ: self.__parse_infix_expression,
         }
 
         self.__next_token()
@@ -126,6 +141,8 @@ class Parser:
                 return self.__parse_function_declaration()
             case TokenType.RETURN:
                 return self.__parse_return_statement()
+            case TokenType.IF:
+                return self.__parse_if_statement()
             case TokenType.LET:
                 return self.__parse_assignment_statement()
             case TokenType.IDENTIFIER:
@@ -339,3 +356,26 @@ class Parser:
 
     def __parse_identifier_literal(self):
         return IdentifierLiteral(self.__current_token.token_literal)
+
+    def __parse_boolean_literal(self):
+        return BooleanLiteral(self.__current_token_is(TokenType.TRUE))
+
+    def __parse_if_statement(self):
+        if_statement: IfStatement = IfStatement()
+
+        self.__next_token()
+
+        if_statement.condition = self.__parse_expression(PrecedenceType.P_LOWEST)
+
+        if not self.__expect_token(TokenType.LCURLY):
+            return None
+
+        if_statement.consequence = self.__parse_block_statement()
+        if self.__peak_token_is(TokenType.ELSE):
+            self.__next_token()
+            if not self.__expect_token(TokenType.LCURLY):
+                return None
+
+            if_statement.alternative = self.__parse_block_statement()
+
+        return if_statement
