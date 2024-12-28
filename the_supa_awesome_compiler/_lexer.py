@@ -1,5 +1,6 @@
 from _token import TokenType, Token, lookup_identifier
 from typing import Optional
+from collections import deque
 
 
 class Lexer:
@@ -14,6 +15,8 @@ class Lexer:
         self.current_char: Optional[str] = None
 
         self.__read_char()
+
+        self.__token_queue = deque()
 
     @property
     def current_token(self):
@@ -55,6 +58,15 @@ class Lexer:
         return False
 
     @staticmethod
+    def is_digit(char: str):
+        return char.isnumeric()
+
+    @staticmethod
+    def pop_while_not_empty(stack):
+        while len(stack):
+            yield stack.pop()
+
+    @staticmethod
     def __new_token(
         token_type: TokenType, token_literal: str, pos: tuple[int, int]
     ) -> Token:
@@ -72,43 +84,120 @@ class Lexer:
 
         return literal
 
-    def __read_number(self) -> Token:
-        start_pos = (self.__row, self.__col - 1)
+    def __read_num_or_range(self):
+        current_pos = (self.__row, self.__col - 1)
+        char_count = 0
         dot_count: int = 0
-        number: str = ""
+        literal = ""
 
         while self.__is_digit(self.current_char) or self.current_char == ".":
             if self.current_char == ".":
                 dot_count += 1
 
-            if dot_count > 1:
-                return self.__new_token(
-                    TokenType.ILLEGAL,
-                    self.__source[self.__row][start_pos[1] : self.__col],
-                    start_pos,
-                )
+            literal += self.current_char
 
-            number += self.current_char or ""
             self.__read_char()
 
-            if self.current_char is None:
-                break
-
-        if dot_count == 0:
+        if dot_count > 2:
             return self.__new_token(
-                TokenType.INT,
-                number,
-                start_pos,
+                TokenType.ILLEGAL,
+                self.__source[self.__row][current_pos[0] : current_pos[0] + char_count],
+                current_pos,
             )
-        else:
+
+        elif dot_count == 2:
+            de = deque(literal)
+            range_start = ""
+            range_end_reversed = []
+
+            while self.__is_digit(de[0]):
+                range_start += de.popleft()
+            while self.__is_digit(de[-1]):
+                range_end_reversed.append(de.pop())
+
+            if not len(range_end_reversed):
+                return self.__new_token(
+                    TokenType.ILLEGAL,
+                    self.__source[self.__row][
+                        current_pos[0] : current_pos[0] + char_count
+                    ],
+                    current_pos,
+                )
+
+            elif de[0] != de[-1] != "." or len(de) != 2:
+                return self.__new_token(
+                    TokenType.ILLEGAL,
+                    self.__source[self.__row][
+                        current_pos[0] : current_pos[0] + char_count
+                    ],
+                    current_pos,
+                )
+
+            else:
+                range_end = "".join(self.pop_while_not_empty(range_end_reversed))
+                self.__token_queue.append(
+                    self.__new_token(TokenType.RANGE_SEPARATOR, "..", current_pos)
+                )
+                self.__token_queue.append(
+                    self.__new_token(TokenType.INT, range_end, current_pos)
+                )
+
+                return self.__new_token(TokenType.INT, range_start, current_pos)
+
+        elif dot_count == 1:
             return self.__new_token(
                 TokenType.FLOAT,
-                number,
-                start_pos,
+                literal,
+                current_pos,
             )
+
+        else:
+            return self.__new_token(
+                TokenType.INT,
+                literal,
+                current_pos,
+            )
+
+    # def __read_number(self) -> Token:
+    #     start_pos = (self.__row, self.__col - 1)
+    #     dot_count: int = 0
+    #     number: str = ""
+    #
+    #     while self.__is_digit(self.current_char) or self.current_char == ".":
+    #         if self.current_char == ".":
+    #             dot_count += 1
+    #
+    #         if dot_count > 1:
+    #             return self.__new_token(
+    #                 TokenType.ILLEGAL,
+    #                 self.__source[self.__row][start_pos[1] : self.__col],
+    #                 start_pos,
+    #             )
+    #
+    #         number += self.current_char or ""
+    #         self.__read_char()
+    #
+    #         if self.current_char is None:
+    #             break
+    #
+    #     if dot_count == 0:
+    #         return self.__new_token(
+    #             TokenType.INT,
+    #             number,
+    #             start_pos,
+    #         )
+    #     else:
+    #         return self.__new_token(
+    #             TokenType.FLOAT,
+    #             number,
+    #             start_pos,
+    #         )
 
     def next_token(self) -> Token:
         self.__skip_whitespace()
+
+        if self.__token_queue:
+            return self.__token_queue.popleft()
 
         match self.current_char:
             case "+":
@@ -184,7 +273,7 @@ class Lexer:
                     tok = self.__new_token(literal_type, literal, self.__current_pos)
                     return tok
                 if self.__is_digit(self.current_char):
-                    tok = self.__read_number()
+                    tok = self.__read_num_or_range()
                     return tok
                 else:
                     tok = self.__new_token(

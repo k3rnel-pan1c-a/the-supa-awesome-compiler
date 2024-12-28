@@ -1185,3 +1185,4 @@ secring.*
 
 # User defined
 the_supa_awesome_compiler/__pycache__
+the_supa_awesome_compiler/test.py

@@ -10,8 +10,9 @@ from ctypes import CFUNCTYPE, c_int
 
 LEXER_DEBUG: bool = True
 COMPILER_DEBUG: bool = False
-RUN_COMPILER: bool = True
-RUN_CODE: bool = True
+RUN_PARSER: bool = False
+RUN_COMPILER: bool = False
+RUN_CODE: bool = False
 
 if __name__ == "__main__":
     with open("../tests/func.marsh", "r") as f:
@@ -22,9 +23,9 @@ if __name__ == "__main__":
         debug_lexer = Lexer(source_code)
         while debug_lexer.current_char is not None:
             print(debug_lexer.next_token())
-
-    parser = Parser(Lexer(source_code))
-    program = parser.parse_program()
+    if RUN_PARSER:
+        parser = Parser(Lexer(source_code))
+        program = parser.parse_program()
 
     if COMPILER_DEBUG:
         if len(parser.errors):
@@ -33,8 +34,8 @@ if __name__ == "__main__":
 
             exit(1)
 
-    with open("../debug/ast.json", "w") as f:
-        json.dump(program.json_repr(), f, indent=4)
+        with open("../debug/ast.json", "w") as f:
+            json.dump(program.json_repr(), f, indent=4)
 
     if RUN_COMPILER:
         compiler = Compiler()

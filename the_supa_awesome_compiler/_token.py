@@ -54,6 +54,11 @@ class TokenType(Enum):
 
     # LOOPS
     WHILE = "WHILE"
+    FOR = "FOR"
+    RANGE_SEPARATOR = "RANGE_SEPARATOR"
+
+    # INCLUSION
+    IN = "IN"
 
 
 KEYWORDS: dict[str, TokenType] = {
@@ -65,6 +70,8 @@ KEYWORDS: dict[str, TokenType] = {
     "true": TokenType.TRUE,
     "false": TokenType.FALSE,
     "while": TokenType.WHILE,
+    "for": TokenType.FOR,
+    "in": TokenType.IN,
 }
 
 TYPE_KEYWORDS = ["int", "float", "bool"]
