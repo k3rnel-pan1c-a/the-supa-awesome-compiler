@@ -28,6 +28,7 @@ class NodeType(Enum):
 
     # LOOPS
     WHILE_LOOP = "WHILE_LOOP"
+    FOR_LOOP = "FOR_LOOP"
 
 
 class Node(ABC):
@@ -240,7 +241,7 @@ class PrefixExpression(Expression):
 
 
 class IntegerLiteral(Expression):
-    def __init__(self, int_literal: Optional[None] = None):
+    def __init__(self, int_literal: Optional[int] = None):
         self.int_literal = int_literal
 
     def type(self) -> NodeType:
@@ -292,4 +293,32 @@ class WhileLoop(Statement):
             "condition": self.condition.json_repr(),
             "consequence": self.consequence.json_repr(),
             "alternative": self.alternative.json_repr(),
+        }
+
+
+class ForLoop(Statement):
+    def __init__(
+        self,
+        identifier: IdentifierLiteral = None,
+        range_start: IntegerLiteral = None,
+        block_statement: BlockStatement = None,
+        condition: InfixExpression = None,
+        range_end: IntegerLiteral = None,
+    ):
+        self.identifier = identifier
+        self.range_start = range_start
+        self.block_statement = block_statement
+        self.condition = condition
+        self.range_end = range_end
+
+    def type(self):
+        return NodeType.FOR_LOOP
+
+    def json_repr(self) -> dict:
+        return {
+            "type": self.type().value,
+            "identifier": self.identifier.json_repr(),
+            "range_start": self.range_start.json_repr(),
+            "block_statement": self.block_statement.json_repr(),
+            "range_end": self.range_end.json_repr(),
         }

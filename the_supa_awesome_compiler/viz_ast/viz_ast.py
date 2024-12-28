@@ -44,7 +44,7 @@ class ASTVisualizer:
         self.graph.render(filename, view=True)
 
 
-with open("../debug/ast.json") as f:
+with open("../../debug/ast.json") as f:
     ast_json = json.load(f)
 
 visualizer = ASTVisualizer()

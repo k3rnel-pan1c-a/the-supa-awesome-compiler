@@ -1,0 +1,73 @@
+{
+    "type": "PROGRAM",
+    "statements": [
+        {
+            "FUNCTION_STATEMENT": {
+                "type": "FUNCTION_STATEMENT",
+                "name": "main",
+                "parameters": [],
+                "body": {
+                    "type": "BLOCK_STATEMENT",
+                    "statements": [
+                        {
+                            "type": "ASSIGNMENT_STATEMENT",
+                            "identifier": "x",
+                            "value": {
+                                "type": "INTEGER_LITERAL",
+                                "literal": 1
+                            },
+                            "value_type": "int"
+                        },
+                        {
+                            "type": "FOR_LOOP",
+                            "identifier": {
+                                "type": "IDENTIFIER_LITERAL",
+                                "identifier": "i"
+                            },
+                            "range_start": {
+                                "type": "INTEGER_LITERAL",
+                                "literal": 1
+                            },
+                            "block_statement": {
+                                "type": "BLOCK_STATEMENT",
+                                "statements": [
+                                    {
+                                        "type": "REASSIGNMENT_STATEMENT",
+                                        "identifier": {
+                                            "type": "IDENTIFIER_LITERAL",
+                                            "identifier": "x"
+                                        },
+                                        "value": {
+                                            "type": "INFIX_EXPRESSION",
+                                            "left_node": {
+                                                "type": "IDENTIFIER_LITERAL",
+                                                "identifier": "x"
+                                            },
+                                            "operator": "+",
+                                            "right_node": {
+                                                "type": "INTEGER_LITERAL",
+                                                "literal": 1
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            "range_end": {
+                                "type": "INTEGER_LITERAL",
+                                "literal": 10
+                            }
+                        },
+                        {
+                            "type": "RETURN_STATEMENT",
+                            "expression": {
+                                "type": "IDENTIFIER_LITERAL",
+                                "identifier": "x"
+                            }
+                        }
+                    ]
+                },
+                "return_type": "int"
+            }
+        }
+    ]
+}

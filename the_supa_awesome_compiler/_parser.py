@@ -13,6 +13,7 @@ from _AST import (
     ReassignmentStatement,
     IfStatement,
     WhileLoop,
+    ForLoop,
 )
 from _AST import InfixExpression, PrefixExpression
 from _AST import IntegerLiteral, FloatLiteral, IdentifierLiteral, BooleanLiteral
@@ -162,6 +163,9 @@ class Parser:
                 return self.__parse_reassignment_statement()
             case TokenType.WHILE:
                 return self.__parse_while_loop()
+
+            case TokenType.FOR:
+                return self.__parse_for_loop()
             case _:
                 return self.__parse_expression_statement()
 
@@ -415,3 +419,35 @@ class Parser:
         while_loop.consequence = self.__parse_block_statement()
 
         return while_loop
+
+    def __parse_for_loop(self):
+        for_loop: ForLoop = ForLoop()
+
+        if not self.__expect_token(TokenType.IDENTIFIER):
+            return None
+        for_loop.identifier = self.__parse_identifier_literal()
+
+        if not self.__expect_token(TokenType.IN):
+            return None
+
+        if not self.__expect_token(TokenType.INT):
+            return None
+        for_loop.range_start = self.__parse_int_literal()
+
+        if not self.__expect_token(TokenType.RANGE_SEPARATOR):
+            return None
+
+        if not self.__expect_token(TokenType.INT):
+            return None
+        for_loop.range_end = self.__parse_int_literal()
+
+        for_loop.condition = InfixExpression(
+            left_node=for_loop.identifier, operator="<", right_node=for_loop.range_end
+        )
+
+        if not self.__expect_token(TokenType.LCURLY):
+            return None
+
+        for_loop.block_statement = self.__parse_block_statement()
+
+        return for_loop

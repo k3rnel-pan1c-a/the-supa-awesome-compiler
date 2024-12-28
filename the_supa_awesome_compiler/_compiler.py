@@ -14,6 +14,7 @@ from _AST import (
     ReassignmentStatement,
     IfStatement,
     WhileLoop,
+    ForLoop,
     BooleanLiteral,
     PrefixExpression,
     InfixExpression,
@@ -92,6 +93,9 @@ class Compiler:
 
             case NodeType.WHILE_LOOP:
                 self.__visit_while_loop(cast(WhileLoop, node))
+
+            case NodeType.FOR_LOOP:
+                self.__visit_for_loop(cast(ForLoop, node))
 
     def __visit_program(self, node: Program):
         for stmt in node.statements:
@@ -199,6 +203,38 @@ class Compiler:
         value, _ = self.__resolve_value(condition)
         self.__builder.cbranch(value, while_loop_entry, while_loop_otherwise)
         self.__builder.position_at_start(while_loop_otherwise)
+
+    def __visit_for_loop(self, node: ForLoop):
+        identifier = node.identifier
+        range_start = node.range_start
+        block_statement = node.block_statement
+        condition = node.condition
+
+        ptr = self.__builder.alloca(self.__type_map["int"])
+        self.__builder.store(
+            ir.Constant(self.__type_map["int"], range_start.int_literal), ptr
+        )
+
+        self.__environment.define(
+            identifier.identifier_literal, ptr, self.__type_map["int"]
+        )
+
+        for_loop_entry = self.__builder.append_basic_block("for_loop_entry")
+        for_loop_otherwise = self.__builder.append_basic_block("for_loop_otherwise")
+
+        value, _ = self.__resolve_value(condition)
+        self.__builder.cbranch(value, for_loop_entry, for_loop_otherwise)
+
+        self.__builder.position_at_start(for_loop_entry)
+        self.compile(block_statement)
+        current_value = self.__builder.load(ptr)
+        result = self.__builder.add(current_value, ir.Constant(ir.IntType(32), 1))
+
+        self.__builder.store(result, ptr)
+
+        value, _ = self.__resolve_value(condition)
+        self.__builder.cbranch(value, for_loop_entry, for_loop_otherwise)
+        self.__builder.position_at_start(for_loop_otherwise)
 
     def __visit_expression_statement(self, node: ExpressionStatement):
         self.compile(node.expression)
