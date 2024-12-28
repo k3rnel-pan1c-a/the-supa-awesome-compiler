@@ -29,6 +29,8 @@ from typing import cast, Optional
 
 class Compiler:
     def __init__(self):
+        self.errors = []
+
         self.__type_map = {
             "int": ir.IntType(32),
             "float": ir.FloatType(),
@@ -69,7 +71,14 @@ class Compiler:
             return self.__visit_parent_environment(environment.parent, node)
 
         else:
-            return environment.lookup(node.identifier_literal)
+            if environment.lookup(node.identifier_literal) is None:
+                self.errors.append(f"Undefined variable {node.identifier_literal}")
+                raise Exception(
+                    f"Exception occurred: Undefined variable '{node.identifier_literal}'"
+                )
+
+            else:
+                return environment.lookup(node.identifier_literal)
 
     def compile(self, node: Node):
         match node.type():
@@ -188,6 +197,9 @@ class Compiler:
         consequence = node.consequence
         alternative = node.alternative
 
+        prev_environment = self.__environment
+        self.__environment = Environment(parent=self.__environment)
+
         value, _ = self.__resolve_value(condition)
 
         if not alternative.statements:
@@ -201,9 +213,14 @@ class Compiler:
                 with otherwise:
                     self.compile(alternative)
 
+        self.__environment = prev_environment
+
     def __visit_while_loop(self, node: WhileLoop):
         condition = node.condition
         consequence = node.consequence
+
+        prev_environment = self.__environment
+        self.__environment = Environment(parent=self.__environment)
 
         value, _ = self.__resolve_value(condition)
 
@@ -217,6 +234,8 @@ class Compiler:
         value, _ = self.__resolve_value(condition)
         self.__builder.cbranch(value, while_loop_entry, while_loop_otherwise)
         self.__builder.position_at_start(while_loop_otherwise)
+
+        self.__environment = prev_environment
 
     def __visit_for_loop(self, node: ForLoop):
         identifier = node.identifier

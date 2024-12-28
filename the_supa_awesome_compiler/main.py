@@ -8,7 +8,7 @@ from llvmlite import ir
 import llvmlite.binding as llvm
 from ctypes import CFUNCTYPE, c_int
 
-LEXER_DEBUG: bool = True
+LEXER_DEBUG: bool = False
 COMPILER_DEBUG: bool = False
 RUN_PARSER: bool = True
 RUN_COMPILER: bool = True
@@ -39,7 +39,13 @@ if __name__ == "__main__":
 
     if RUN_COMPILER:
         compiler = Compiler()
-        compiler.compile(program)
+
+        try:
+            compiler.compile(program)
+
+        except Exception as e:
+            print(e)
+            exit(1)
 
         module: ir.Module = compiler.module
         module.triple = llvm.get_default_triple()
