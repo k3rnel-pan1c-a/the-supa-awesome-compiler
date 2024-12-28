@@ -18,6 +18,7 @@ from _AST import (
     BooleanLiteral,
     PrefixExpression,
     InfixExpression,
+    CallExpression,
     IntegerLiteral,
     FloatLiteral,
     IdentifierLiteral,
@@ -118,6 +119,9 @@ class Compiler:
             case NodeType.FOR_LOOP:
                 self.__visit_for_loop(cast(ForLoop, node))
 
+            case NodeType.FUNCTION_CALL:
+                self.__visit_function_call(cast(CallExpression, node))
+
     def __visit_program(self, node: Program):
         for stmt in node.statements:
             self.compile(stmt)
@@ -139,16 +143,14 @@ class Compiler:
 
         prev_builder = self.__builder
 
-        self.__builder = ir.IRBuilder(block)
+        self.__builder = self.builder
 
         prev_environment = self.__environment
 
         self.__environment = Environment(parent=self.__environment)
         self.__environment.define(name, function, return_type)
 
-        self.compile(
-            body
-        )  # Need to change the environment to prev and current to allow for recursive calls
+        self.compile(body)
 
         self.__environment = prev_environment
         self.__environment.define(name, function, return_type)
@@ -275,6 +277,20 @@ class Compiler:
 
         self.__environment = prev_environment
 
+    def __visit_function_call(self, node: CallExpression):
+        function_name = node.function_name.identifier_literal
+
+        args = []
+
+        match function_name:
+            case _:
+                func, ret_type = self.__visit_parent_environment(
+                    self.__environment, node.function_name
+                )
+                ret = self.__builder.call(func, args)
+
+        return ret, ret_type
+
     def __visit_expression_statement(self, node: ExpressionStatement):
         self.compile(node.expression)
 
@@ -365,3 +381,7 @@ class Compiler:
             case NodeType.PREFIX_EXPRESSION:
                 node: PrefixExpression = cast(PrefixExpression, node)
                 return self.__visit_prefix_expression(node)
+
+            case NodeType.FUNCTION_CALL:
+                node: CallExpression = cast(CallExpression, node)
+                return self.__visit_function_call(node)

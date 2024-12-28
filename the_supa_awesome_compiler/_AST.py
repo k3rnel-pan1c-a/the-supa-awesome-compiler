@@ -30,6 +30,9 @@ class NodeType(Enum):
     WHILE_LOOP = "WHILE_LOOP"
     FOR_LOOP = "FOR_LOOP"
 
+    # FUNCTION
+    FUNCTION_CALL = "FUNCTION_CALL"
+
 
 class Node(ABC):
     @abstractmethod
@@ -321,4 +324,24 @@ class ForLoop(Statement):
             "range_start": self.range_start.json_repr(),
             "block_statement": self.block_statement.json_repr(),
             "range_end": self.range_end.json_repr(),
+        }
+
+
+class CallExpression(Expression):
+    def __init__(
+        self,
+        function_name: IdentifierLiteral = None,
+        arguments: list[Expression] = None,
+    ):
+        self.function_name = function_name
+        self.arguments = arguments
+
+    def type(self) -> NodeType:
+        return NodeType.FUNCTION_CALL
+
+    def json_repr(self) -> dict:
+        return {
+            "type": self.type().value,
+            "function": self.function_name.json_repr(),
+            "arguments": [arg.json_repr() for arg in self.arguments],
         }

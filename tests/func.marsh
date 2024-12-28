@@ -1,9 +1,8 @@
-function main() -> int {
-    let x: int = 1;
+function test() -> int{
+    return 1;
+}
 
-    for i in 1..10{
-        x = x + 1;
-    }
-    return x;
+function main() -> int {
+    return test();
 }
 

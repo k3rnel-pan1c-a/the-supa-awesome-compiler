@@ -40,12 +40,12 @@ if __name__ == "__main__":
     if RUN_COMPILER:
         compiler = Compiler()
 
-        try:
-            compiler.compile(program)
-
-        except Exception as e:
-            print(e)
-            exit(1)
+        # try:
+        compiler.compile(program)
+        #
+        # except Exception as e:
+        #     print(e)
+        #     exit(1)
 
         module: ir.Module = compiler.module
         module.triple = llvm.get_default_triple()

@@ -26,6 +26,8 @@ class TokenType(Enum):
     RPAREN = "RPAREN"
     LCURLY = "LCURLY"
     RCURLY = "RCURLY"
+    LSQR = "LSQR"
+    RSQR = "RSQR"
 
     SEMICOLON = "SEMICOLON"
     COLON = "COLON"

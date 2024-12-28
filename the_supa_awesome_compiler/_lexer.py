@@ -1,4 +1,4 @@
-from _token import TokenType, Token, lookup_identifier
+from _token import TokenType, Token, lookup_identifier, TYPE_KEYWORDS
 from typing import Optional
 from collections import deque
 
@@ -236,6 +236,10 @@ class Lexer:
                 tok = self.__new_token(TokenType.LCURLY, "{", self.__current_pos)
             case "}":
                 tok = self.__new_token(TokenType.RCURLY, "}", self.__current_pos)
+            case "[":
+                tok = self.__new_token(TokenType.LSQR, "[", self.__current_pos)
+            case "]":
+                tok = self.__new_token(TokenType.RSQR, "]", self.__current_pos)
             case ";":
                 tok = self.__new_token(TokenType.SEMICOLON, ";", self.__current_pos)
             case ":":
@@ -270,6 +274,8 @@ class Lexer:
                 if self.__is_letter(self.current_char):
                     literal = self.__read_literal()
                     literal_type = lookup_identifier(literal)
+                    if literal_type in TYPE_KEYWORDS:
+                        self.__read_array_type()
                     tok = self.__new_token(literal_type, literal, self.__current_pos)
                     return tok
                 if self.__is_digit(self.current_char):

@@ -14,6 +14,7 @@ from _AST import (
     IfStatement,
     WhileLoop,
     ForLoop,
+    CallExpression,
 )
 from _AST import InfixExpression, PrefixExpression
 from _AST import IntegerLiteral, FloatLiteral, IdentifierLiteral, BooleanLiteral
@@ -51,6 +52,7 @@ PRECEDENCES: dict[TokenType, PrecedenceType] = {
     TokenType.BW_XOR: PrecedenceType.P_BW_XOR,
     TokenType.BW_AND: PrecedenceType.P_BW_AND,
     TokenType.BW_NOT: PrecedenceType.P_BW_NOT,
+    TokenType.LPAREN: PrecedenceType.P_CALL,
 }
 
 
@@ -89,6 +91,7 @@ class Parser:
             TokenType.BW_XOR: self.__parse_infix_expression,
             TokenType.BW_OR: self.__parse_infix_expression,
             TokenType.BW_AND: self.__parse_infix_expression,
+            TokenType.LPAREN: self.__parse_call_expression,
         }
 
         self.__next_token()
@@ -282,10 +285,18 @@ class Parser:
         if not self.__expect_token(TokenType.TYPE):
             return None
 
-        statement.value_type = self.__current_token.token_literal
+        assignment_statement_data_type = self.__current_token
 
-        if not self.__expect_token(TokenType.EQUALS):
-            return None
+        if self.__peak_token_is(TokenType.LSQR):
+            self.__next_token()
+            if not self.__expect_token(TokenType.RSQR):
+                return None
+            else:
+                statement.value_type = f"{assignment_statement_data_type}[]"
+        else:
+            statement.value_type = self.__current_token.token_literal
+            if not self.__expect_token(TokenType.EQUALS):
+                return None
 
         self.__next_token()
 
@@ -451,3 +462,15 @@ class Parser:
         for_loop.block_statement = self.__parse_block_statement()
 
         return for_loop
+
+    def __parse_call_expression(self, function_name: IdentifierLiteral):
+        expr: CallExpression = CallExpression(function_name)
+        expr.arguments = []
+
+        if not self.__expect_token(TokenType.RPAREN):
+            return None
+
+        return expr
+
+    def __parse_arrays(self):
+        pass
