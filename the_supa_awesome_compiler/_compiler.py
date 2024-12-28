@@ -59,6 +59,18 @@ class Compiler:
         self.__environment.define("true", true_const, true_const.type)
         self.__environment.define("false", false_const, false_const.type)
 
+    def __visit_parent_environment(
+        self, environment: Environment, node: IdentifierLiteral
+    ):
+        if (
+            environment.lookup(node.identifier_literal) is None
+            and environment.parent is not None
+        ):
+            return self.__visit_parent_environment(environment.parent, node)
+
+        else:
+            return environment.lookup(node.identifier_literal)
+
     def compile(self, node: Node):
         match node.type():
             case NodeType.PROGRAM:
@@ -155,17 +167,19 @@ class Compiler:
 
             self.__environment.define(identifier.identifier_literal, ptr, type)
         else:
-            ptr, _ = self.__environment.lookup(
-                identifier.identifier_literal
-            )  # Need to restrict this to only the
-            # current scope
+            ptr, _ = self.__visit_parent_environment(self.__environment, identifier)
+            #     ptr, _ = self.__environment.lookup(
+            #         identifier.identifier_literal
+            #     )  # Need to restrict this to only the
+            # # current scope
             self.__builder.store(value, ptr)
 
     def __visit_reassignment_statement(self, node: ReassignmentStatement):
         identifier: IdentifierLiteral = node.identifier
         value: Expression = node.value
 
-        ptr, _ = self.__environment.lookup(identifier.identifier_literal)
+        ptr, _ = self.__visit_parent_environment(self.__environment, identifier)
+        # ptr, _ = self.__environment.lookup(identifier.identifier_literal)
         value, _ = self.__resolve_value(value)
         self.__builder.store(value, ptr)
 
@@ -210,6 +224,10 @@ class Compiler:
         block_statement = node.block_statement
         condition = node.condition
 
+        prev_environment = self.__environment
+
+        self.__environment = Environment(parent=self.__environment)
+
         ptr = self.__builder.alloca(self.__type_map["int"])
         self.__builder.store(
             ir.Constant(self.__type_map["int"], range_start.int_literal), ptr
@@ -235,6 +253,8 @@ class Compiler:
         value, _ = self.__resolve_value(condition)
         self.__builder.cbranch(value, for_loop_entry, for_loop_otherwise)
         self.__builder.position_at_start(for_loop_otherwise)
+
+        self.__environment = prev_environment
 
     def __visit_expression_statement(self, node: ExpressionStatement):
         self.compile(node.expression)
@@ -308,7 +328,9 @@ class Compiler:
 
             case NodeType.IDENTIFIER_LITERAL:
                 node: IdentifierLiteral = cast(IdentifierLiteral, node)
-                ptr, node_type = self.__environment.lookup(node.identifier_literal)
+                ptr, node_type = self.__visit_parent_environment(
+                    self.__environment, node
+                )
                 return self.__builder.load(ptr), node_type
 
             case NodeType.BOOLEAN_EXPRESSION:  # Load the boolean values from the symbol table
