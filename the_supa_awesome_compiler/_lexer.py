@@ -131,6 +131,10 @@ class Lexer:
                 tok = self.__new_token(TokenType.BW_OR, "|", self.__current_pos)
             case "&":
                 tok = self.__new_token(TokenType.BW_AND, "&", self.__current_pos)
+            case "||":
+                tok = self.__new_token(TokenType.OR, "||", self.__current_pos)
+            case "&&":
+                tok = self.__new_token(TokenType.AND, "&&", self.__current_pos)
             case "~":
                 tok = self.__new_token(TokenType.BW_NOT, "~", self.__current_pos)
             case "!":
