@@ -244,6 +244,8 @@ class Lexer:
                 tok = self.__new_token(TokenType.SEMICOLON, ";", self.__current_pos)
             case ":":
                 tok = self.__new_token(TokenType.COLON, ":", self.__current_pos)
+            case ",":
+                tok = self.__new_token(TokenType.COMMA, ",", self.__current_pos)
             case "=":
                 if self.__peek_next_char() == "=":
                     tok = self.__new_token(TokenType.EQ_EQ, "==", self.__current_pos)

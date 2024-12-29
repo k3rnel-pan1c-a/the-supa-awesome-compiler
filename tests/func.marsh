@@ -1,8 +1,21 @@
-function test() -> int{
-    return 1;
+function fact(num: int) -> int{
+    if num == 1{
+        return 1;
+    }
+    return num * fact(num - 1);
+}
+
+function fib(n: int) -> int{
+    if n == 0{
+        return 0;
+    }
+    if n == 1{
+        return 1;
+    }
+    return fib(n-1) + fib(n-2);
 }
 
 function main() -> int {
-    return test();
+    return fib(5);
 }
 

@@ -32,6 +32,7 @@ class TokenType(Enum):
     SEMICOLON = "SEMICOLON"
     COLON = "COLON"
     ARROW = "ARROW"
+    COMMA = "COMMA"
 
     # KEYWORDS
     LET = "LET"

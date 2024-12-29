@@ -18,6 +18,7 @@ from _AST import (
 )
 from _AST import InfixExpression, PrefixExpression
 from _AST import IntegerLiteral, FloatLiteral, IdentifierLiteral, BooleanLiteral
+from _AST import FunctionParameter
 
 
 class PrecedenceType(Enum):
@@ -185,10 +186,7 @@ class Parser:
         if not self.__expect_token(TokenType.LPAREN):
             return None
 
-        function_statement.parameters = []
-
-        if not self.__expect_token(TokenType.RPAREN):
-            return None
+        function_statement.parameters = self.__parse_function_parameters()
 
         if not self.__expect_token(TokenType.ARROW):
             return None
@@ -206,6 +204,46 @@ class Parser:
         function_statement.body = block_statement
 
         return function_statement
+
+    def __parse_function_parameters(self):
+        parameters = []
+
+        if self.__peak_token_is(TokenType.RPAREN):
+            self.__next_token()
+            return parameters
+
+        self.__next_token()
+
+        first_parameter: FunctionParameter = FunctionParameter(
+            self.__current_token.token_literal
+        )
+
+        if not self.__expect_token(TokenType.COLON):
+            return None
+
+        self.__next_token()
+
+        first_parameter.parameter_type = self.__current_token.token_literal
+        parameters.append(first_parameter)
+
+        while self.__peak_token_is(TokenType.COMMA):
+            self.__next_token()
+            self.__next_token()
+
+            parameter: FunctionParameter = FunctionParameter(
+                self.__current_token.token_literal
+            )
+            if not self.__expect_token(TokenType.COLON):
+                return None
+
+            self.__next_token()
+
+            parameter.parameter_type = self.__current_token.token_literal
+            parameters.append(parameter)
+        if not self.__expect_token(TokenType.RPAREN):
+            return None
+
+        return parameters
 
     def __parse_return_statement(self) -> ReturnStatement:
         return_statement: ReturnStatement = ReturnStatement()
@@ -465,12 +503,33 @@ class Parser:
 
     def __parse_call_expression(self, function_name: IdentifierLiteral):
         expr: CallExpression = CallExpression(function_name)
-        expr.arguments = []
+        expr.arguments = self.__parse_expression_list()
+
+        return expr
+
+    def __parse_expression_list(self):
+        expression_list: list[Expression] = []
+
+        if self.__peak_token_is(TokenType.RPAREN):
+            self.__next_token()
+            return expression_list
+
+        self.__next_token()
+
+        expression_list.append(self.__parse_expression(PrecedenceType.P_LOWEST))
+
+        while self.__peak_token_is(TokenType.COMMA):
+            self.__next_token()
+            self.__next_token()
+
+            expression_list.append(self.__parse_expression(PrecedenceType.P_LOWEST))
 
         if not self.__expect_token(TokenType.RPAREN):
             return None
 
-        return expr
+        return expression_list
 
-    def __parse_arrays(self):
-        pass
+    # def __parse_expression_list(self):
+    #
+    # def __parse_arrays(self):
+    #     pass

@@ -30,8 +30,9 @@ class NodeType(Enum):
     WHILE_LOOP = "WHILE_LOOP"
     FOR_LOOP = "FOR_LOOP"
 
-    # FUNCTION
+    # FUNCTIONS
     FUNCTION_CALL = "FUNCTION_CALL"
+    FUNCTION_PARAMETER = "FUNCTION_PARAMETER"
 
 
 class Node(ABC):
@@ -327,11 +328,27 @@ class ForLoop(Statement):
         }
 
 
+class FunctionParameter(Expression):
+    def __init__(self, parameter_name: str = None, parameter_type: str = None):
+        self.parameter_name = parameter_name
+        self.parameter_type = parameter_type
+
+    def type(self) -> NodeType:
+        return NodeType.FUNCTION_PARAMETER
+
+    def json_repr(self) -> dict:
+        return {
+            "type": self.type().value,
+            "parameter_name": self.parameter_name,
+            "parameter_type": self.parameter_type,
+        }
+
+
 class CallExpression(Expression):
     def __init__(
         self,
         function_name: IdentifierLiteral = None,
-        arguments: list[Expression] = None,
+        arguments: list[FunctionParameter] = None,
     ):
         self.function_name = function_name
         self.arguments = arguments

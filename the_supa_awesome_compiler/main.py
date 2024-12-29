@@ -26,7 +26,7 @@ if __name__ == "__main__":
     if RUN_PARSER:
         parser = Parser(Lexer(source_code))
         program = parser.parse_program()
-
+        print(program.json_repr())
         with open("../debug/ast.json", "w") as f:
             json.dump(program.json_repr(), f, indent=4)
 

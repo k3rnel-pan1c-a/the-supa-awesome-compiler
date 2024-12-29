@@ -9,6 +9,7 @@ from _AST import (
     ExpressionStatement,
     AssignmentStatement,
     FunctionStatement,
+    FunctionParameter,
     BlockStatement,
     ReturnStatement,
     ReassignmentStatement,
@@ -129,8 +130,12 @@ class Compiler:
     def __visit_function_statement(self, node: FunctionStatement):
         name: str = node.function_name.identifier_literal
         body: BlockStatement = node.body
+        parameters: list[FunctionParameter] = node.parameters
 
-        parameter_types: list[ir.Type] = []
+        parameters_names = [p.parameter_name for p in parameters]
+        parameter_types: list[ir.Type] = [
+            self.__type_map[p.parameter_type] for p in parameters
+        ]
 
         return_type: ir.Type = self.__type_map[node.return_type]
 
@@ -145,9 +150,23 @@ class Compiler:
 
         self.__builder = self.builder
 
+        params_ptr = []
+
+        for i, typ in enumerate(parameter_types):
+            ptr = self.builder.alloca(typ)
+            self.builder.store(function.args[i], ptr)
+            params_ptr.append(ptr)
+
         prev_environment = self.__environment
 
         self.__environment = Environment(parent=self.__environment)
+
+        for i, x in enumerate(parameters_names):
+            type = parameter_types[i]
+            ptr = params_ptr[i]
+
+            self.__environment.define(x, ptr, type)
+
         self.__environment.define(name, function, return_type)
 
         self.compile(body)
@@ -179,10 +198,6 @@ class Compiler:
             self.__environment.define(identifier.identifier_literal, ptr, type)
         else:
             ptr, _ = self.__visit_parent_environment(self.__environment, identifier)
-            #     ptr, _ = self.__environment.lookup(
-            #         identifier.identifier_literal
-            #     )  # Need to restrict this to only the
-            # # current scope
             self.__builder.store(value, ptr)
 
     def __visit_reassignment_statement(self, node: ReassignmentStatement):
@@ -279,8 +294,15 @@ class Compiler:
 
     def __visit_function_call(self, node: CallExpression):
         function_name = node.function_name.identifier_literal
+        parameters = node.arguments
 
         args = []
+        types = []
+        if len(parameters) > 0:
+            for param in parameters:
+                p_val, p_type = self.__resolve_value(param)
+                args.append(p_val)
+                types.append(p_type)
 
         match function_name:
             case _:
