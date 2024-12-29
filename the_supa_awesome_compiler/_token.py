@@ -40,6 +40,8 @@ class TokenType(Enum):
     ELSE = "ELSE"
     TRUE = "TRUE"
     FALSE = "FALSE"
+    BREAK = "BREAK"
+    CONTINUE = "CONTINUE"
 
     EQUALS = "EQUALS"
 
@@ -51,6 +53,9 @@ class TokenType(Enum):
     GT = "GT"
     LT = "LT"
     NOT = "NOT"
+
+    AND = "AND"
+    OR = "OR"
 
 
 KEYWORDS: dict[str, TokenType] = {
