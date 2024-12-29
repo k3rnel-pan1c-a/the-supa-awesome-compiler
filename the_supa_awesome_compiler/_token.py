@@ -66,6 +66,10 @@ KEYWORDS: dict[str, TokenType] = {
     "else": TokenType.ELSE,
     "true": TokenType.TRUE,
     "false": TokenType.FALSE,
+    "and": TokenType.AND,
+    "or": TokenType.OR,
+    "break": TokenType.BREAK,
+    "continue": TokenType.CONTINUE
 }
 
 TYPE_KEYWORDS = ["int", "float", "bool"]
