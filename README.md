@@ -3,9 +3,9 @@
 A very cool compiler for a very cool language written using python and LLVM!! 
 
  ## Features
-- **it's fast**, because it should be so, together with LLVM's state of the art optimizations, but it won't ever oblige you to make an extra effort from your side just for the sake of performance
-- **it's compiled** using llvmlite
-- **it's statically typed** so you don't need to guess the type of the variable if your coworker didn't spend the time to use meaningful names and you can make use of compile-time checks, autocomplete and more
+- **it's fast**, which is due to LLVM's state of the art optimizations.
+- **it's compiled** using llvmlite.
+- **it's statically typed** which helps catch a lot of errors at compile-time.
 
 
 ## Factorial Function
