@@ -34,6 +34,10 @@ class NodeType(Enum):
     FUNCTION_CALL = "FUNCTION_CALL"
     FUNCTION_PARAMETER = "FUNCTION_PARAMETER"
 
+    # DATA_STRUCTURES
+    ARRAY_LITERAL = "ARRAY_LITERAL"
+    INDEX = "INDEX"
+
 
 class Node(ABC):
     @abstractmethod
@@ -177,10 +181,12 @@ class AssignmentStatement(Statement):
         identifier: IdentifierLiteral = None,
         value: Expression = None,
         value_type: str = None,
+        size: int = None,
     ):
         self.identifier = identifier
         self.value = value
         self.value_type = value_type
+        self.size = size
 
     def type(self):
         return NodeType.ASSIGNMENT_STATEMENT
@@ -191,6 +197,7 @@ class AssignmentStatement(Statement):
             "identifier": self.identifier.identifier_literal,
             "value": self.value.json_repr(),
             "value_type": self.value_type,
+            "size": self.size,
         }
 
 
@@ -361,4 +368,34 @@ class CallExpression(Expression):
             "type": self.type().value,
             "function": self.function_name.json_repr(),
             "arguments": [arg.json_repr() for arg in self.arguments],
+        }
+
+
+class ArrayLiteral(Expression):
+    def __init__(self, values: list[Expression] = None):
+        self.values = values
+
+    def type(self) -> NodeType:
+        return NodeType.ARRAY_LITERAL
+
+    def json_repr(self) -> dict:
+        return {
+            "type": self.type().value,
+            "values": [value.json_repr() for value in self.values],
+        }
+
+
+class IndexExpression(Expression):
+    def __init__(self, array: Expression = None, index: Expression = None):
+        self.array = array
+        self.index = index
+
+    def type(self) -> NodeType:
+        return NodeType.INDEX
+
+    def json_repr(self) -> dict:
+        return {
+            "type": self.type().name,
+            "array": self.array.json_repr(),
+            "index": self.index.json_repr(),
         }

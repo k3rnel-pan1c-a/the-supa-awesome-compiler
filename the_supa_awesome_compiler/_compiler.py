@@ -23,6 +23,8 @@ from _AST import (
     IntegerLiteral,
     FloatLiteral,
     IdentifierLiteral,
+    ArrayLiteral,
+    IndexExpression,
 )
 from _environment import Environment
 
@@ -43,6 +45,9 @@ class Compiler:
         self.__environment = Environment()
 
         self.__initialize_builtins()
+
+        self.__while_loop_count = 0
+        self.__for_loop_count = 0
 
     def __initialize_builtins(self):
         def __initialize_booleans():
@@ -188,24 +193,47 @@ class Compiler:
 
     def __visit_assignment_statement(self, node: AssignmentStatement):
         identifier: IdentifierLiteral = node.identifier
-
         value, type = self.__resolve_value(node.value)
 
-        if self.__environment.lookup(identifier.identifier_literal) is None:
-            ptr = self.__builder.alloca(type)
-            self.__builder.store(value, ptr)
-
-            self.__environment.define(identifier.identifier_literal, ptr, type)
+        if isinstance(type, ir.ArrayType):
+            if self.__environment.lookup(identifier.identifier_literal) is None:
+                ptr = self.__builder.alloca(type)
+                elements = value.constant
+                for i, element in enumerate(elements):
+                    element_ptr = self.__builder.gep(
+                        ptr,
+                        [
+                            ir.Constant(ir.IntType(32), 0),
+                            ir.Constant(ir.IntType(32), i),
+                        ],
+                    )
+                    self.__builder.store(element, element_ptr)
+                self.__environment.define(identifier.identifier_literal, ptr, type)
+            else:
+                ptr, _ = self.__visit_parent_environment(self.__environment, identifier)
+                for i, element in enumerate(value):
+                    element_ptr = self.__builder.gep(
+                        ptr,
+                        [
+                            ir.Constant(ir.IntType(32), 0),
+                            ir.Constant(ir.IntType(32), i),
+                        ],
+                    )
+                    self.__builder.store(element, element_ptr)
         else:
-            ptr, _ = self.__visit_parent_environment(self.__environment, identifier)
-            self.__builder.store(value, ptr)
+            if self.__environment.lookup(identifier.identifier_literal) is None:
+                ptr = self.__builder.alloca(type)
+                self.__builder.store(value, ptr)
+                self.__environment.define(identifier.identifier_literal, ptr, type)
+            else:
+                ptr, _ = self.__visit_parent_environment(self.__environment, identifier)
+                self.__builder.store(value, ptr)
 
     def __visit_reassignment_statement(self, node: ReassignmentStatement):
         identifier: IdentifierLiteral = node.identifier
         value: Expression = node.value
 
         ptr, _ = self.__visit_parent_environment(self.__environment, identifier)
-        # ptr, _ = self.__environment.lookup(identifier.identifier_literal)
         value, _ = self.__resolve_value(value)
         self.__builder.store(value, ptr)
 
@@ -332,7 +360,6 @@ class Compiler:
     def __visit_infix_expression(self, node: InfixExpression):
         left_val, left_type = self.__resolve_value(node.left_node)
         right_val, right_type = self.__resolve_value(node.right_node)
-
         operator = node.operator
 
         if isinstance(left_type, ir.IntType) and isinstance(right_type, ir.IntType):
@@ -407,3 +434,26 @@ class Compiler:
             case NodeType.FUNCTION_CALL:
                 node: CallExpression = cast(CallExpression, node)
                 return self.__visit_function_call(node)
+
+            case NodeType.ARRAY_LITERAL:
+                node: ArrayLiteral = cast(ArrayLiteral, node)
+                element_values = [
+                    self.__resolve_value(element)[0] for element in node.values
+                ]
+                element_type = element_values[0].type
+                array_type = ir.ArrayType(element_type, len(element_values))
+                array_value = ir.Constant(array_type, element_values)
+
+                return array_value, array_type
+
+            case NodeType.INDEX:
+                node: IndexExpression = cast(IndexExpression, node)
+                array_ptr, array_type = self.__resolve_value(node.array)
+                index_value, _ = self.__resolve_value(node.index)
+
+                array_ptr = array_ptr.operands[0]
+
+                element_ptr = self.__builder.gep(
+                    array_ptr, [ir.Constant(ir.IntType(32), 0), index_value]
+                )
+                return self.__builder.load(element_ptr), array_type.element

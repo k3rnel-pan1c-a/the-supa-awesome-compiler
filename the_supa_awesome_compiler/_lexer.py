@@ -1,4 +1,4 @@
-from _token import TokenType, Token, lookup_identifier, TYPE_KEYWORDS
+from _token import TokenType, Token, lookup_identifier
 from typing import Optional
 from collections import deque
 
@@ -276,8 +276,8 @@ class Lexer:
                 if self.__is_letter(self.current_char):
                     literal = self.__read_literal()
                     literal_type = lookup_identifier(literal)
-                    if literal_type in TYPE_KEYWORDS:
-                        self.__read_array_type()
+                    # if literal_type in TYPE_KEYWORDS:
+                    #     self.__read_array_type()
                     tok = self.__new_token(literal_type, literal, self.__current_pos)
                     return tok
                 if self.__is_digit(self.current_char):

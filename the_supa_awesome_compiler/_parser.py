@@ -15,6 +15,8 @@ from _AST import (
     WhileLoop,
     ForLoop,
     CallExpression,
+    ArrayLiteral,
+    IndexExpression,
 )
 from _AST import InfixExpression, PrefixExpression
 from _AST import IntegerLiteral, FloatLiteral, IdentifierLiteral, BooleanLiteral
@@ -54,6 +56,7 @@ PRECEDENCES: dict[TokenType, PrecedenceType] = {
     TokenType.BW_AND: PrecedenceType.P_BW_AND,
     TokenType.BW_NOT: PrecedenceType.P_BW_NOT,
     TokenType.LPAREN: PrecedenceType.P_CALL,
+    TokenType.LSQR: PrecedenceType.P_INDEX,
 }
 
 
@@ -93,6 +96,7 @@ class Parser:
             TokenType.BW_OR: self.__parse_infix_expression,
             TokenType.BW_AND: self.__parse_infix_expression,
             TokenType.LPAREN: self.__parse_call_expression,
+            TokenType.LSQR: self.__parse_index_expression,
         }
 
         self.__next_token()
@@ -167,7 +171,6 @@ class Parser:
                 return self.__parse_reassignment_statement()
             case TokenType.WHILE:
                 return self.__parse_while_loop()
-
             case TokenType.FOR:
                 return self.__parse_for_loop()
             case _:
@@ -320,25 +323,41 @@ class Parser:
         if not self.__expect_token(TokenType.COLON):
             return None
 
-        if not self.__expect_token(TokenType.TYPE):
-            return None
-
-        assignment_statement_data_type = self.__current_token
-
         if self.__peak_token_is(TokenType.LSQR):
             self.__next_token()
+
+            if not self.__expect_token(TokenType.TYPE):
+                return None
+
+            statement.value_type = self.__current_token.token_literal
+
+            if not self.__expect_token(TokenType.COMMA):
+                return None
+
+            if not self.__expect_token(TokenType.INT):
+                return None
+
+            statement.size = int(self.__current_token.token_literal)
+
             if not self.__expect_token(TokenType.RSQR):
                 return None
-            else:
-                statement.value_type = f"{assignment_statement_data_type}[]"
+
+            if not self.__expect_token(TokenType.EQUALS):
+                return None
+
+            statement.value = self.__parse_array_literal()
+
         else:
+            if not self.__expect_token(TokenType.TYPE):
+                return None
+
             statement.value_type = self.__current_token.token_literal
             if not self.__expect_token(TokenType.EQUALS):
                 return None
 
-        self.__next_token()
+            self.__next_token()
 
-        statement.value = self.__parse_expression(PrecedenceType.P_LOWEST)
+            statement.value = self.__parse_expression(PrecedenceType.P_LOWEST)
 
         while not self.__current_token_is(
             TokenType.SEMICOLON
@@ -346,6 +365,35 @@ class Parser:
             self.__next_token()
 
         return statement
+
+    def __parse_array_literal(self) -> ArrayLiteral:
+        array_literal = ArrayLiteral()
+        array_literal.values = []
+        if not self.__expect_token(TokenType.LSQR):
+            return None
+
+        while not self.__peak_token_is(TokenType.RSQR):
+            self.__next_token()
+            array_literal.values.append(
+                self.__parse_expression(PrecedenceType.P_LOWEST)
+            )
+            if self.__peak_token_is(TokenType.COMMA):
+                self.__next_token()
+
+        return array_literal
+
+    def __parse_index_expression(self, array: Expression) -> Expression:
+        index_expression = IndexExpression()
+        index_expression.array = array
+
+        self.__next_token()
+
+        index_expression.index = self.__parse_expression(PrecedenceType.P_LOWEST)
+
+        if not self.__expect_token(TokenType.RSQR):
+            return None
+
+        return index_expression
 
     def __parse_reassignment_statement(self):
         reassignment_statement: ReassignmentStatement = ReassignmentStatement()
@@ -379,7 +427,6 @@ class Parser:
                 f"Could not parse the expression with the left node: {left_node}"
             )
             return None
-
         infix_expression.right_node = right_node
         return infix_expression
 
@@ -388,7 +435,7 @@ class Parser:
 
         expression: Expression = self.__parse_expression(PrecedenceType.P_LOWEST)
 
-        if not self.__peek_error(TokenType.RPAREN):
+        if not self.__expect_token(TokenType.RPAREN):
             return None
 
         return expression
@@ -528,8 +575,3 @@ class Parser:
             return None
 
         return expression_list
-
-    # def __parse_expression_list(self):
-    #
-    # def __parse_arrays(self):
-    #     pass

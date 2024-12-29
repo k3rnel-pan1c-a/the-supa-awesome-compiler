@@ -8,88 +8,6 @@
                 "parameters": [
                     {
                         "type": "FUNCTION_PARAMETER",
-                        "parameter_name": "num",
-                        "parameter_type": "int"
-                    }
-                ],
-                "body": {
-                    "type": "BLOCK_STATEMENT",
-                    "statements": [
-                        {
-                            "type": "IF_STATEMENT",
-                            "condition": {
-                                "type": "INFIX_EXPRESSION",
-                                "left_node": {
-                                    "type": "IDENTIFIER_LITERAL",
-                                    "identifier": "num"
-                                },
-                                "operator": "==",
-                                "right_node": {
-                                    "type": "INTEGER_LITERAL",
-                                    "literal": 1
-                                }
-                            },
-                            "consequence": {
-                                "type": "BLOCK_STATEMENT",
-                                "statements": [
-                                    {
-                                        "type": "RETURN_STATEMENT",
-                                        "expression": {
-                                            "type": "INTEGER_LITERAL",
-                                            "literal": 1
-                                        }
-                                    }
-                                ]
-                            },
-                            "alternative": {
-                                "type": "BLOCK_STATEMENT",
-                                "statements": []
-                            }
-                        },
-                        {
-                            "type": "RETURN_STATEMENT",
-                            "expression": {
-                                "type": "INFIX_EXPRESSION",
-                                "left_node": {
-                                    "type": "IDENTIFIER_LITERAL",
-                                    "identifier": "num"
-                                },
-                                "operator": "*",
-                                "right_node": {
-                                    "type": "FUNCTION_CALL",
-                                    "function": {
-                                        "type": "IDENTIFIER_LITERAL",
-                                        "identifier": "fact"
-                                    },
-                                    "arguments": [
-                                        {
-                                            "type": "INFIX_EXPRESSION",
-                                            "left_node": {
-                                                "type": "IDENTIFIER_LITERAL",
-                                                "identifier": "num"
-                                            },
-                                            "operator": "-",
-                                            "right_node": {
-                                                "type": "INTEGER_LITERAL",
-                                                "literal": 1
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    ]
-                },
-                "return_type": "int"
-            }
-        },
-        {
-            "FUNCTION_STATEMENT": {
-                "type": "FUNCTION_STATEMENT",
-                "name": "fib",
-                "parameters": [
-                    {
-                        "type": "FUNCTION_PARAMETER",
                         "parameter_name": "n",
                         "parameter_type": "int"
                     }
@@ -108,37 +26,6 @@
                                 "operator": "==",
                                 "right_node": {
                                     "type": "INTEGER_LITERAL",
-                                    "literal": 0
-                                }
-                            },
-                            "consequence": {
-                                "type": "BLOCK_STATEMENT",
-                                "statements": [
-                                    {
-                                        "type": "RETURN_STATEMENT",
-                                        "expression": {
-                                            "type": "INTEGER_LITERAL",
-                                            "literal": 0
-                                        }
-                                    }
-                                ]
-                            },
-                            "alternative": {
-                                "type": "BLOCK_STATEMENT",
-                                "statements": []
-                            }
-                        },
-                        {
-                            "type": "IF_STATEMENT",
-                            "condition": {
-                                "type": "INFIX_EXPRESSION",
-                                "left_node": {
-                                    "type": "IDENTIFIER_LITERAL",
-                                    "identifier": "n"
-                                },
-                                "operator": "==",
-                                "right_node": {
-                                    "type": "INTEGER_LITERAL",
                                     "literal": 1
                                 }
                             },
@@ -164,10 +51,15 @@
                             "expression": {
                                 "type": "INFIX_EXPRESSION",
                                 "left_node": {
+                                    "type": "IDENTIFIER_LITERAL",
+                                    "identifier": "n"
+                                },
+                                "operator": "*",
+                                "right_node": {
                                     "type": "FUNCTION_CALL",
                                     "function": {
                                         "type": "IDENTIFIER_LITERAL",
-                                        "identifier": "fib"
+                                        "identifier": "fact"
                                     },
                                     "arguments": [
                                         {
@@ -180,28 +72,6 @@
                                             "right_node": {
                                                 "type": "INTEGER_LITERAL",
                                                 "literal": 1
-                                            }
-                                        }
-                                    ]
-                                },
-                                "operator": "+",
-                                "right_node": {
-                                    "type": "FUNCTION_CALL",
-                                    "function": {
-                                        "type": "IDENTIFIER_LITERAL",
-                                        "identifier": "fib"
-                                    },
-                                    "arguments": [
-                                        {
-                                            "type": "INFIX_EXPRESSION",
-                                            "left_node": {
-                                                "type": "IDENTIFIER_LITERAL",
-                                                "identifier": "n"
-                                            },
-                                            "operator": "-",
-                                            "right_node": {
-                                                "type": "INTEGER_LITERAL",
-                                                "literal": 2
                                             }
                                         }
                                     ]
@@ -227,12 +97,12 @@
                                 "type": "FUNCTION_CALL",
                                 "function": {
                                     "type": "IDENTIFIER_LITERAL",
-                                    "identifier": "fib"
+                                    "identifier": "fact"
                                 },
                                 "arguments": [
                                     {
                                         "type": "INTEGER_LITERAL",
-                                        "literal": 5
+                                        "literal": 7
                                     }
                                 ]
                             }
